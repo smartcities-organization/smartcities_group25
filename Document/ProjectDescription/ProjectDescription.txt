@@ -1,0 +1,26 @@
+Introduction: -
+
+Intro smart buildings….
+
+Why library….
+
+Smart Library by controlling the Lighting and HVAC system, along with safety features like Burglar Alarm System and notifications to the responsible.
+
+System Architecture: -
+
+TBD
+
+Requirement Specification: -
+
+Things our system should do-->
+
+•	Automatic Lighting Control
+o	Motion Sensor to on and OFF
+o	Light sensor to control the intensity
+•	HVAC System Control Based on local sensors and Weather forecast
+o	ON and OFF based on Past weeks usage and presence of users
+o	Temp control based on Temp sensor and weather forecast
+•	Security and Burglar Systems
+o	Alarm based on Intelligent Motion sensing
+o	Send Alarm Notification to Security Personal
+
