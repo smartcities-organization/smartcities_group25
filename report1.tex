@@ -1,0 +1,68 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.20 of 2017/10/04
+%
+\documentclass[runningheads]{llncs}
+\usepackage{graphicx}
+
+\begin{document}
+\title{Your Project Title}
+
+\author{Group Name: Group25, Bhagyalaxmi \and
+Divya \and
+Jerome}
+
+\institute{Service Computing Department, IAAS, University of Stuttgart
+\email{st164379@stud.uni-stuttgart.de} 
+\newline\email{st164388@stud.uni-stuttgart.de} 
+\newline\email{st1164430@stud.uni-stuttgart.de}}
+\maketitle
+%
+\section{Introduction}
+Smartness can be established in any sector of the urban area: be it in an office, school, transportation infrastructure, library etc. Our idea is centralized to a library with focus on energy consumption, security, safety and comfort of its occupants. 
+Energy consumption can be controlled prudently by handling the lighting system, HVAC and other electronic components dynamically. Security is obtained by the alarming system in case of unexpected and malicious entry into the environment under consideration. 
+Sensors and actuators are combined to provide the desired outcome here.
+
+\section{System architecture}
+
+\includegraphics{fig1}
+
+\section{Requirements specification}
+
+\textbf{Presence Based Lighting Control}
+\begin{itemize}
+\item The automatic lighting control in our context refers to turning on and off the lights depending on the presence of subjects in the environment. 
+\item Passive Infrared sensors is used to detect the presence. PIR is a sensor that is sensitive to person’s skin temperature through emitted black body radiation in the mid frequency range in contrast to the background objects at room temperature. 
+\item A light sensor is used to detect the adjust the brightness in the room depending on the amount of the light available in the surrounding. Energy gets saved in these scenarios.
+\end{itemize}
+
+\textbf{Occupancy Prediction}
+\begin{itemize}
+\item The number of occupants in the building is detected and stored for every fixed interval of time. (Ex. Monday 9:00 to 9:15 Number of Occupants = 20)
+\item	The data is stored in the cloud repository. After at least receiving a week’s data the occupancy prediction is made for the next week based on this data.
+\item The prediction algorithm is a simple average of the past number of occupants at that time interval. 
+\end{itemize}
+
+\textbf{HVAC System Control Based on local sensors and Weather forecast}
+\begin{itemize}
+\item User desired temperature is taken as an input.
+\item Indoor and Outdoor Temperature Sensor is used to get the real time feedback of the Temperatures.
+\item Weather forecast is used to predict the Outside Temperature changes in the next hour from now.
+\item The heating and cooling system is switched on and off based on the difference in the Temperatures observed between the library and the surroundings.
+\item The Weather forecast and the occupancy predication is also taken into consideration of the HVAC control.
+\end{itemize}
+
+\textbf{Burglar Alarm System}
+\begin{itemize}
+\item PIR sensors and library timings are used to detect suspicious entry into the building in unexpected times. Once these suspicious movements are detected, a notification is sent to the responsible alerting the situation
+\end{itemize}
+\section{Conclusions and Outlook}
+By this implementation, we intend to bring energy efficiency in the library with security, comfort and safety to the personnel thus fulfilling the purpose of a smart city to an extent utilizing the internet of things technology.
+
+%
+% ---- Bibliography ----
+%
+\bibliographystyle{splncs04}
+\bibliography{mybib}
+
+\end{document}
