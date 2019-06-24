@@ -1311,3 +1311,212 @@ sudo nano test1.py
 cd
 shutdown -h now
 sudo shutdown -h now
+ipconfig
+ifconfig
+shutdown -h now
+sudo shutdown -h now
+cd test/
+ls
+sudo nano test2.py 
+python3 test2.py 
+clear
+exit
+ifconfig
+exit
+ls
+c
+cd SmartCities/
+cd InputDrivers/
+ls
+sudo nano PeopleCount.py 
+python3 PeopleCount.py 
+exit
+ls
+cd SmartCities/InputDrivers/
+ls
+sudo nano TemperatureHumidity.py
+cd
+cd DI/GrovePi/Software/Python/
+cd grove_dht_pro_filter/
+ls
+python3 grove_dht_example2.py 
+python3 grove_dht_example1.py 
+python3 grove_dht_example3.py 
+cd
+cd test/
+ls
+python3 test_Subscribe.py 
+exit
+cd S
+cd SmartCities/
+cd InputDrivers/
+ls
+python3 TemperatureHumidity.py 
+pkill -9 python
+python3 TemperatureHumidity.py 
+pkill -9 python
+python3 TemperatureHumidity.py 
+nano TemperatureHumidity.py 
+python3 TemperatureHumidity.py 
+pkill -9 python
+ls
+pkill -9 python3
+ls
+sudo nano TempHum.py
+python3 TempHum.py
+sudo nano TempHum.py
+python3 TempHum.py
+pkill -9 python3
+sudo nano TempHum.py
+python3 TempHum.py
+pkill -9 python3
+pkill -9 python
+python3 TempHum.py
+pkill -9 python
+pkill -9 python3
+python3 TempHum.py
+pkill -9 python3
+pkill -9 python
+python3 TempHum.py
+pkill -9 python
+python3 TempHum.py
+pkill -9 python
+pkill -9 python3
+ls
+sudo nano TempHum.py
+exit
+cd SmartCities/InputDrivers/
+ls
+python3 PeopleCount.py 
+sudo nano PeopleCount.py 
+python3 PeopleCount.py 
+pkill -9
+python3 PeopleCount.py 
+sudo nano PeopleCount.py 
+sudo nano Combined.py
+ls
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+pkill -9
+pkill -9 python
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+pkill -9 python
+python3 Combined.py
+sudo nano Combined.py
+python3 Combined.py
+pkill -9 python
+pkill -9 python3
+python3 Combined.py
+pkill -9 python3
+pkill -9 python
+i2cdetect -y 1
+exit
+cd test/
+ls
+sudo nano test_Subscribe.py 
+python3 test_Subscribe.py 
+sudo nano test_Subscribe.py 
+python3 test_Subscribe.py 
+pkill -9
+python3 test_Subscribe.py 
+pkill -9 python3
+pkill -9 python
+python3 test_Subscribe.py 
+exit
+sudo shutdown -h now
+cd SmartCities/InputDrivers/
+ls
+sudo nano Combined.py
+python3 Combined.py
+pkill -9 python
+pkill -9 python3
+exit
+cd test/
+ls
+python3 test_Subscribe.py 
+sudo shutdown -h now
+cd test/
+ls
+python3 test_schedule.py 
+sudo nano test_schedule.py 
+python3 test_schedule.py 
+pkill -9 python3
+cd ..
+cd SmartCities/InputDrivers/
+ls
+cd
+cd test/
+python3 test_schedule.py 
+cd
+cd SmartCities/InputDrivers/
+python3 Combined.py 
+python3 Combined.py
+exit
+cd test/
+ls
+python test_Subscribe.py 
+sudo nano test_Subscribe.py 
+python test_Subscribe.py 
+python3 test_Subscribe.py 
+sudo nano test_schedule.py 
+python3 test_Subscribe.py 
+pkill -9 python3
+pkill -9 python
+python3 test_Subscribe.py 
+sudo shutdown -h now
+cd SmartCities/InputDrivers/
+ls
+python3 PeopleCount.py 
+exit
+pkill -9 python
+exit
+cd SmartCities/
+cd InputDrivers/
+ls
+python3 Combined.py 
+cd
+clear
+cd test/
+ls
+python3 test_schedule.py 
+python3 test_Publish.py 
+cd
+cd SmartCities/InputDrivers/
+ls
+python3 PeopleCount.py 
+python3 TempHum.py 
+python3 Combined.py 
+sudo shutdown -h now
+cd test/
+ls
+python3 test_Subscribe.py 
+cd
+cd clear
+clear
+cd test/
+ls
+python3 test_Subscribe.py 
