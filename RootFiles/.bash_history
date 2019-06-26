@@ -1520,3 +1520,37 @@ clear
 cd test/
 ls
 python3 test_Subscribe.py 
+cd D
+cd DI/GrovePi/Software/Python/
+ls
+python3 grove_buzzer.py 
+sudo nano grove_buzzer.py 
+python3 grove_buzzer.py 
+sudo shutdown -h now
+ls
+cd t
+cd test/
+ls
+python3 test_plugwise.py 
+ls
+sudo nano test_plugwise.py 
+python3 test_plugwise.py 
+time
+time sys
+time
+time real
+time user
+clock
+datetime
+datetime.utcnow() time
+python3 test_plugwise.py 
+date
+date -d '2015-06-30 12:00 GMT'
+date -d
+date --help
+date
+date -d '2015-06-30 12:00'
+date -d '2015-06-30 12:00 GMT'
+date
+python3 test_plugwise.py 
+exit
