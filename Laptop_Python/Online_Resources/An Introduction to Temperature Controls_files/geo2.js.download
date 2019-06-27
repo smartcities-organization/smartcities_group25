@@ -1,0 +1,16 @@
+(function(){
+  window['optimizely'] = window['optimizely'] || [];
+  window['optimizely'].push(['activateGeoDelayedExperiments', {
+    'location':{
+      'city': "STUTTGART",
+      'continent': "EU",
+      'country': "DE",
+      'region': "BW"
+    },
+    'ip':"141.58.45.145"
+  }]);
+})
+//
+()
+
+;

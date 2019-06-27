@@ -1,0 +1,19 @@
+window.optimizely.push({type:"load",data:{changes:[{"dependencies": [], "type": "custom_code", "id": "1bb3b50e297d47568eb1529775aeaadc", "value": function($){utils.waitUntil(function () {
+    console.log("-------> Checking for jQuery...");
+    try {
+        var checkjQuery = window.jQuery;
+    } catch (e) {
+        console.log(e);
+    }
+    return typeof window.jQuery == "function";
+}).then(function () {
+    var $ = window.jQuery;
+    $(document).ready(function() {
+        setDynamicHeight();
+
+        $(window).resize(function() {
+            setDynamicHeight();
+        });
+    });
+});
+}}, {"dependencies": [], "type": "append", "id": "765C77E4-F05C-41B0-B01D-78853F529844", "value": "<style>/* Fullstory sessions were showing several sessions without the CSS treatment on the anchor tag */\n#subscribe_copy_link {\n    color: #28628f;\n    text-decoration: underline;\n}\n\n#subscribe_copy_link:hover {\n    color: #6cb33f;\n    text-decoration: underline;\n}</style>", "selector": "head"}]}});

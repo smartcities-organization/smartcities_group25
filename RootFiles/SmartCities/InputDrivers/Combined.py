@@ -7,6 +7,11 @@ import grovepi
 import math
 import time
 import schedule
+from grove_rgb_lcd import *
+
+setText("Welcome To \nSmart Library")
+setRGB(0,128,64)
+
 
 #publish.single("CoreElectronics/test", "Hello", hostname="test.mosquitto.org")
 #publish.single("CoreElectronics/topic", "World!", hostname="test.mosquitto.org")
@@ -52,6 +57,7 @@ def CalcPeopleCount():
 	if currentstate != previousstate:
 		if currentstate == True:
 			peoplecount=peoplecount+1
+			setText("People Count \n {}".format(str(peoplecount)))
 			print("people count updated and published")
 		previousstate = currentstate
 

@@ -1554,3 +1554,107 @@ date -d '2015-06-30 12:00 GMT'
 date
 python3 test_plugwise.py 
 exit
+cd SmartCities/
+cd InputDrivers/
+ls
+python3 Combined.py 
+exit
+cd SmartCities/InputDrivers/
+ls
+python3 Combined.py 
+exit
+cd test/
+python3 test_plugwise.py 
+cd
+cd SmartCities/
+ls
+mkdir OutputDrivers
+ls
+cd o
+cd OutputDrivers/
+ls
+sudo nano ActuatorControl.py
+cd
+cd t
+cd test/
+python3 test_plugwise.py 
+ls
+python3 test_Subscribe.py 
+sudo nano test_Subscribe.py 
+python3 test_Subscribe.py 
+ls
+python3 test_Publish.py circle1_on
+python3 test_Publish.py RedLedON
+python3 test_Publish.py
+python3 test_Publish.py RedLedON
+python3 test_Publish.py Re
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle1_off
+python3 test_Publish.py circle2_on
+python3 test_Publish.py circle1_off
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle2_on
+python3 test_Publish.py circle2_off
+python3 test_Publish.py circle1_off
+python3 test_Publish.py circle2_on
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle2_off
+python3 test_Publish.py circle1_off
+python3 test_Publish.py RedLedON
+python3 test_Publish.py BlueLedON
+python3 test_Publish.py GreenLedON
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle2_on
+python3 test_Publish.py circl
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle2_off
+python3 test_Publish.py RedLedOFF
+python3 test_Publish.py BlueLedOFF
+python3 test_Publish.py GreenLedOFF
+clear
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle1_off
+python3 test_Publish.py GreenLedOFF
+python3 test_Publish.py GreenLedON
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle2_on
+python3 test_Publish.py RedLedON
+python3 test_Publish.py RedLedOFF
+python3 test_Publish.py GreenLedOFF
+python3 test_Publish.py circle1_off
+python3 test_Publish.py circle2_off
+exit
+cd test/
+python3 test_Publish.py 
+python3 test_Publish.py 111
+python3 test_Publish.py 111 222
+python3 test_Publish.py 111
+cd ..
+cd SmartCities/
+ls
+cd OutputDrivers/
+ls
+python3 ActuatorControl.py 
+cd
+cd test/
+python3 test_Subscribe.py 
+cd
+cd SmartCities/OutputDrivers/
+python3 ActuatorControl.py 
+clear
+python3 ActuatorControl.py 
+exit
+cd DI/GrovePi/Software/Python/
+cd grove_rbg_lcd
+cd grove_rgb_lcd/
+ls
+python3 example.py 
+python3 example2.py 
+python3 example3.py 
+python3 grove_rgb_lcd.py 
+sudo nano grove_rgb_lcd.py 
+python3 grove_rgb_lcd.py 
+cd
+cd SmartCities/InputDrivers/
+python3 Combined.py 
+exit

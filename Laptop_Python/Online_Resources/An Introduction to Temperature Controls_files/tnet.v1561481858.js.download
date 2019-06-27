@@ -1,0 +1,2770 @@
+if(typeof(ajxRoot) == 'undefined' || ajxRoot === null){
+	var ajxRoot	= '';
+	if(location.hostname.indexOf('productsourcing')>=0){
+		ajxRoot = 'https://www.thomasnet.com';
+	}
+}
+
+window.name = "thomasnet";
+var screenW = 640, screenH = 480;
+if (parseInt(navigator.appVersion)>3) {
+	screenW = screen.width;
+	screenH = screen.height;
+}
+var coselect = {};
+
+function addToShortList(cid,qs,callback){ //RM7539
+	var url = "/mythomas/add_to_shortlist.html?cids=" + cid +"&origin="+escape(location.pathname+location.search);
+	if(qs)  { url += '&'+qs; }
+	if (window.cb2017 !== undefined) { //RM9563
+		$.colorbox({
+			title : 'Add Supplier to Shortlist',
+			href : url,
+			scrolling : false, 
+			onComplete : function() { $.colorbox.resize(); },
+			onCleanup : function() {if (typeof(callback) == "function") { callback(cid); }}
+		});
+	} else {
+		$.colorbox({
+			title : 'Add Supplier to Shortlist',
+			href : url,
+			scrolling : false, 
+			onComplete : function() { $.colorbox.resize(); },
+			onCleanup : function() {if (typeof(callback) == "function") { callback(cid); }}
+		});
+	}
+}
+
+function catalogImages(){
+	$('.catalog_images .imgframe, .imgviewer').click(function(e){
+		e.preventDefault();
+		var d	= $(this).data();
+		if(isEmpty(d['href']))  { return false; }
+		window.open(d['href'], 'catalogimages', 'height=550,width=800,RESIZABLE=1,TOOLBAR=0,MENUBAR=0,LOCATION=0,STATUS=0,DIRECTORIES=0,SCROLLBARS=1');
+	});
+}
+
+function cntSelComps(){
+	// shove all previously selected companies in array
+	var selct = 0;
+	var preselco = !isEmpty($.cookie('_selco')) ? $.cookie('_selco') : '';
+	var preseldata = preselco.split("|");
+	for(x=0; x < preseldata.length; x++){
+		var idpos = preseldata[x].indexOf('-');
+		var copos = preseldata[x].indexOf('-', idpos+1);
+		var rk = preseldata[x].substring(0,idpos);
+		var id = preseldata[x].substring(idpos+1,copos);
+		var nm = preseldata[x].substring(copos+1);
+		if(id){ selct++; }
+	}
+	return selct;
+}
+
+function compareSupplierBox(){
+	var cohtml = ihtml = midhtml = "";
+	var preselco = !isEmpty($.cookie('_selco')) ? $.cookie('_selco') : '';
+	var preseldata	= preselco.split("|");
+	var supSelCt = 0; //RM9377
+	
+	for(x=0; x < preseldata.length; x++){
+		var idpos	= preseldata[x].indexOf('-');
+		var copos	= preseldata[x].indexOf('-', idpos+1);
+		var rk	= preseldata[x].substring(0,idpos);
+		var id	= preseldata[x].substring(idpos+1,copos);
+		var nm	= preseldata[x].substring(copos+1);
+		nm	= nm.replace(/\+/g, ' ')
+		if(id && nm){
+			supSelCt++; //RM9377
+			// Added return to following line 2017-03-10 - Clicking was executing the link. (G.S.)
+			cohtml += "<a href=\"#\" class=\"appliedval\" onclick=\"return delCompareCo('"+id+"','"+rk+"');\">"+nm+"</a>\n";
+		}
+	}
+
+	//var isRM9377 = (location.hostname == 'tnet.thomasnet.com' ? 1 : 0); //RM9377
+
+	if(cohtml)	{
+		ihtml	= "<div class=\"selcomp\"><span class=\"orangetxt\">Suppliers Selected</span><br />\n";
+		
+		// 3-24-2017 RM 9508  -- RM9629
+		ihtml	= "<h4>Suppliers Selected</h4>\n<div class=\"selcomp\">";
+		if(supSelCt > 1){
+			midhtml += "<a href=\"javascript:void(0)\" onclick=\"deleteSelComps()\" class=\"clearall\">Clear All</a>";
+			ihtml += "<a href=\"javascript:void(0)\" onclick=\"deleteSelComps()\" class=\"clearall\">Clear All</a>";
+		}
+		midhtml	+= "<h2>Suppliers Selected:</h2>";
+		
+		midhtml += cohtml;
+		ihtml  += cohtml;
+		ihtml  += compBtn;
+		ihtml  += "</div>\n";
+		$("#complist").html(ihtml).show();
+		$("#complistmid").html(midhtml).show();
+
+		// Mini SendRFI Button...
+		if (supSelCt > 0) { $(".btn_mini_rfi").show(); }
+		else { $(".btn_mini_rfi").hide(); }
+
+		// Mini Compare Button...
+		if (supSelCt > 1) { $(".btn_mini_cmpr").show(); }
+		else { $(".btn_mini_cmpr").hide(); }
+
+		//  Mini Risk Report Button...
+		if (rskelg.getCount() > 1) { $(".btn_mini_rsk").show(); }
+		else { $(".btn_mini_rsk").hide(); }
+
+	} else {
+
+		$(".groupact_btn_mini").hide();
+		$("#complist").hide();
+		$("#complistmid").hide();
+	}
+
+	// Large SendRFI Button...
+	if (supSelCt > 0) { $(".btn_lrg_rfi").removeClass("dsbl"); }
+	else { $(".btn_lrg_rfi").addClass("dsbl"); }
+
+	// Large Compare Button...
+	if (supSelCt > 1) { $(".btn_lrg_cmpr").removeClass("dsbl"); }
+	else { $(".btn_lrg_cmpr").addClass("dsbl"); }
+
+	// Large Risk Report Button...
+	//console.log(rskelg.getCount());
+	if (rskelg.getCount() > 1) { $(".btn_lrg_rsk").removeClass("dsbl"); }
+	else { $(".btn_lrg_rsk").addClass("dsbl"); } 
+}
+
+var rskelg = { //RM9377
+    /* Handles everything related to the _rskelg cookie. This cookie holds an array of accounts 
+    that are eligible to have risk (D&B) reports generated for them. */
+    eligible : [],
+    inited : 0,
+    init : function() {
+        try {
+            var rskelg = !isEmpty($.cookie('_rskelg')) ? $.cookie('_rskelg') : JSON.stringify([]);
+            var rskelgdata = JSON.parse(rskelg);
+            this.eligible = rskelgdata;
+            this.inited = 1;
+        } catch(err) {
+            this.eligible = [];
+            console.log('Error parsing _rskelg cookie.');
+        }
+    },
+    findloc : function(ac) {
+        if (!this.inited) { this.init(); }
+        var loc = -1;
+        $.each(this.eligible, function(idx, val) {
+            if (ac == val.ac) { loc = idx; return false; }
+        });
+        return loc;
+    },
+    add : function(rk,ac) {
+        if (!this.inited) { this.init(); }
+        var loc = this.findloc(ac);
+        if (loc > -1) { this.eligible.splice(loc,1); }
+        this.eligible.push({'rk' : rk, 'ac' : ac});
+        this.writeCookie();
+    },
+    remove : function(ac) {
+        if (!this.inited) { this.init(); }
+        var loc = this.findloc(ac);
+        if (loc > -1) { this.eligible.splice(loc,1); }
+        this.writeCookie();
+    },
+    getCount : function() {
+        if (!this.inited) { this.init(); }
+        return this.eligible.length;
+    },
+    getAccts : function() {
+        if (!this.inited) { this.init(); }
+        var rtn = [];
+        $.each(this.eligible, function(idx, val) { rtn.push(val.ac) });
+        rtn = rtn.join();
+        return rtn;
+    },
+    writeCookie : function() {
+        if (!this.inited) { this.init(); }
+        $.cookie('_rskelg', JSON.stringify(this.eligible), { path: '/', domain: '.thomasnet.com' });
+    },
+    showval : function() {
+        if (!this.inited) { this.init(); }
+        $.each(
+            this.eligible,
+            function(idx,val){ console.log(idx + ') rk: ' + val.rk + ' ac: ' + val.ac); }
+        );
+    },
+}
+ 
+function openPopCart(url) { //RM9377
+    if (window.cb2017 !== undefined) { //RM9563
+	   $.colorbox({ href: url, iframe : true, innerWidth : 600, innerHeight : 200 });
+	} else {
+	   $.colorbox({ href: url, iframe : true, width : 665, height : 340 });
+	}
+}
+
+function compareSuppliersChk(chkbox, rank, coname){
+	var acct  = chkbox.value;
+	var maxSelect = rfiMaxSelections(); //RMCaterpillar //RM6917
+	preSelComps(rank);
+	var selected = cntSelComps();
+	//if (isDevSite) { //RM9377 - Decrement seems to have been missing before for unchecks.
+	    if(chkbox.checked){ selected++; }
+	    else { selected--; }
+	//} else {
+	//    if(chkbox.checked){ selected++; }
+	//}
+	if(selected > maxSelect){ //RMCaterpillar //RM6917
+		if(isRFIMaxOverride()) { //RMCaterpillar //RM6917
+			msg = "You can select a maximum of " + maxSelect + " companies to contact.\n";
+		} else {
+			msg = "You can only select a maximum of up to 5 companies to compare.\n";
+			msg += "To contact more than 5 companies, click Request a Quote to proceed, and then select Contact Additional Suppliers.";
+		}
+		alert(msg);
+
+		chkbox.checked = 0;
+	}
+	var rowid	= "row"+acct;
+	//if (isDevSite) { //RM9377
+	    var rsk = $(chkbox).data('rskelg');
+	//}
+	if(chkbox.checked){ //RM9377
+	    //if (isDevSite) {
+	        if (rsk) { rskelg.add(rank,acct); }
+	    //}
+		coselect[rank] = acct+"-"+coname;
+		$("#"+rowid).addClass("hlcompare");
+	} else {
+	    //if (isDevSite) {//RM9377
+	        rskelg.remove(acct);
+	    //}
+		delete coselect[rank];
+		$("#"+rowid).removeClass("hlcompare");
+	}
+	showSelCookie();
+	compareSupplierBox();
+	compRfiInit();
+}
+
+function compareSuppliers(qs){
+	var selected = cntSelComps();
+	// isRFIMaxOverride() is only true for tnetpro and Caterpillar at this time.
+	var maxCompare = 5; //RM7208
+	if (isRFIMaxOverride()) { maxCompare = 1000; } //RM7208
+	if(selected > maxCompare){
+		alert("You may not select more than " + maxCompare + " companies."); //RM7208
+	} else if(selected < 2){
+		alert("Please select between 2 and 5 companies to compare.");
+	} else if(selected){
+		window.open('/compare.html?'+qs, '_blank');
+	}
+}
+
+//function cbResize (elm) { //RM9563
+//    var x = $(elm).width();
+//    var y = $(elm).height();
+    //console.log("x: " + x + " y: " + y);
+//    parent.$.colorbox.resize({innerWidth:x, innerHeight:y});
+//}
+
+function compRptProc(qs) { //RM9497 (Replaced "Old" version below)
+    var rskCount = rskelg.getCount();
+    if (rskCount < 2) {
+        return false;
+    } else if (rskCount > 5) {
+        alert("A maximum of 5 companies may be selected.");
+    } else if (rskCount < 5) {
+        var crURL = '/dnb/comprpt_conf.html?cids='+rskelg.getAccts();
+        if (qs != '') { crURL = crURL + '&' + qs; }
+        document.cookie = 'ad_click=DBONSRB; domain=.thomasnet.com; path=/'; // TW-16
+        if (window.cb2017 !== undefined) { //RM9563
+            $.colorbox({ href: crURL, innerWidth:637, innerHeight:352, iframe:true, overlayClose:true });
+        } else {
+            $.colorbox({ href: crURL, width:709, height:525, iframe:true, closeButton:false, overlayClose:true, className: "cbsquare cbthintop" });
+        }
+    } else {
+        // Exactly 5 are selected.
+        //if (window.rm10049 !== undefined) { //RM10049
+        var crURL = ordersrv + '/dnb/cart.html?'+qs+'&accts='+rskelg.getAccts();
+        //window.location.href = crURL;
+        var newwin = window.open(crURL);
+        if(!newwin){
+            location.href = crURL;
+            return false;
+        }
+        //} else {
+        //   var crURL = '/dnb/cart_popup.html?SKU=10000&cids='+rskelg.getAccts();
+        //    if (qs != '') { crURL = crURL + '&' + qs; }
+        //   openPopCart(crURL);
+        //}
+    }
+    return false;
+}
+
+function compRfiInit(){
+	$(".compbtn").click(function(){
+		compareSuppliers(btnParams);
+	});
+    /* RM9263
+	$(".rfibtn").click(function(){
+		rfi_reqInfoSubmit(btnParams, 0);
+	});
+    */
+	//$(".rfibtn").click(function(){ // Commented 2017-08-15. G.S. (Apparently not used and causing an error.)
+	//	rfi_Multi(btnParams);
+	//});
+}
+
+function daFetch(type, params){
+	var url = "https://sda.thomasnet.com/customlib/"+type+".php";
+	$.ajax({
+		type: "GET",
+		url: url,
+		crossDomain: true,
+		data: params,
+		dataType: "jsonp",
+		success: function (data) {
+			$.each(data, function(key, value) {
+				var $el = $('#' + key);
+
+				if(!value) {
+					$el.hide();
+					return;
+				}
+		
+				if($el.hasClass("da-hide-sm") && $el.is(':hidden')) {
+					return;
+				} 
+		
+				$el.html(value).show();
+			});
+		}
+	});
+}
+
+function decodeParams(val){
+	val	= decodeURIComponent(val);
+	return val.replace(/&amp;/g, '&');
+}
+
+function delCompareCo(cid,rk){
+	preSelComps(rk);
+	rskelg.remove(cid);	//RM9377
+
+	delete coselect[rk];
+	var rowid	= "row"+cid;
+	$("#"+rowid).removeClass("hlcompare");
+	$("#"+rowid+" .hlcheck").prop("checked", false);
+	showSelCookie();
+	compareSupplierBox();
+	compRfiInit();
+	return false; // Added 2017-03-10 - Clicking was executing the link. (G.S.)
+}
+
+function deleteSelComps(){
+	var preselco	= !isEmpty($.cookie('_selco')) ? $.cookie('_selco') : '';
+	var preseldata	= preselco.split("|");
+	
+	for(x=0; x < preseldata.length; x++){
+		var idpos	= preseldata[x].indexOf('-');
+		var copos	= preseldata[x].indexOf('-', idpos+1);
+		var cid	= preseldata[x].substring(idpos+1,copos);
+		rskelg.remove(cid);
+	}
+	delete coselect;
+	$(".resultdata").removeClass("hlcompare");
+	$(".hlcheck").prop("checked", false);
+	$.cookie('_selco', '', { path: '/', domain: '.thomasnet.com' });
+	compareSupplierBox();
+	return false;
+}
+
+equalheight = function(container){
+	var currentTallest = 0,
+		currentRowStart = 0,
+		rowDivs = new Array(),
+		$el,
+		topPosition = 0;
+
+	$(container).each(function() {
+		$el = $(this);
+		$($el).height('auto')
+		topPostion = $el.position().top;
+
+		if (currentRowStart != topPostion) {
+			for (currentDiv = 0 ; currentDiv < rowDivs.length ; currentDiv++) {
+				rowDivs[currentDiv].height(currentTallest);
+			}
+			rowDivs.length = 0; // empty the array
+			currentRowStart = topPostion;
+			currentTallest = $el.height();
+			rowDivs.push($el);
+		} else {
+			rowDivs.push($el);
+			currentTallest = (currentTallest < $el.height()) ? ($el.height()) : (currentTallest);
+		}
+		for (currentDiv = 0 ; currentDiv < rowDivs.length ; currentDiv++) {
+			rowDivs[currentDiv].height(currentTallest);
+		}
+	});
+}
+
+setnewequalheight  = function(el,newheight){
+    var pdt = el.css("padding-top");
+    var pdb = el.css("padding-bottom");        
+    el.css({"padding-top":"0", "padding-bottom":"0"});
+    el.height(newheight);
+    el.css({"padding-top":pdt, "padding-bottom":pdb});
+}
+newequalheight = function(container){
+    var currentTallest = 0,
+        currentRowStart = 0,
+        rowDivs = new Array(),
+        $el,
+        topPosition = 0;
+
+    $(container).each(function() {
+        $el = $(this);
+        $($el).height('auto');
+        topPostion = $el.position().top;
+
+        if (currentRowStart != topPostion) {
+            for (currentDiv = 0 ; currentDiv < rowDivs.length ; currentDiv++) {
+                setnewequalheight(rowDivs[currentDiv], currentTallest);
+            }
+            rowDivs.length = 0; // empty the array
+            currentRowStart = topPostion;
+            currentTallest = $el.outerHeight();
+            rowDivs.push($el);
+        } else {
+            rowDivs.push($el);
+            currentTallest = (currentTallest < $el.outerHeight()) ? ($el.outerHeight()) : (currentTallest);
+        }
+        for (currentDiv = 0 ; currentDiv < rowDivs.length ; currentDiv++) {
+            setnewequalheight(rowDivs[currentDiv], currentTallest);
+        }
+    });
+}
+
+
+function featCID(cid){
+	$.cookie('featCID', cid, { expires: 1, path: '/', domain: 'thomasnet.com' });
+}
+
+function getCookie(c_name){
+	if (document.cookie.length>0){
+		c_start=document.cookie.indexOf(c_name + "=")
+		if (c_start!=-1){ 
+			c_start=c_start + c_name.length+1 
+			c_end=document.cookie.indexOf(";",c_start)
+			if (c_end==-1) c_end=document.cookie.length
+			return unescape(document.cookie.substring(c_start,c_end))
+		}
+	}
+	return "";
+}
+
+function getElement (id){
+	return document.all ? document.all(id) : document.getElementById ? document.getElementById(id) : document.layers ? document.layers[id] : null;
+}
+
+var getTlmTagsFromQS = function ( queryString, eventType ) {
+	var tlmtags = {}, newtag, i;
+
+	var paramobj	= parseQueryString(queryString);
+
+	for (var i in paramobj) {
+		if (paramobj.hasOwnProperty(i)) {
+			newtag = irtags[i] ? irtags[i] : i.toLowerCase();
+			//document.write(i + " ("+newtag+") = " + decodeURIComponent(paramobj[i].replace(/\+/g, ' ')) + "\n");
+			tlmtags[newtag]	= decodeURIComponent(paramobj[i].replace(/\+/g, ' '));
+		}
+	}
+
+	if(!isEmpty(tlmtags)){
+		tlmtags['event_type'] = !eventType ? 'link' : eventType;
+	}
+
+	return tlmtags;
+}
+
+function in_array (needle, haystack, argStrict) {
+	var key = '',
+	strict = !! argStrict;
+
+	if (strict) {
+		for (key in haystack) {
+			if (haystack[key] === needle) {
+				return true;
+			}
+		}
+	} else {
+		for (key in haystack) {
+			if (haystack[key] == needle) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function initDropDownFilters(){
+	$('.dropdown .label').click(function(e){
+		e.preventDefault();
+		$('.dropdown .label').not(this).removeClass('active');
+		$('.dropdown .label').not(this).parent().find('.dropdown-list').slideUp();
+		$(this).toggleClass('active');
+		$(this).parent().find('.dropdown-list').slideToggle();
+	});
+	$('.prodline_filters .dropdown-list a, .prodline_selected_filters a').click(function(e){
+		e.preventDefault();
+		var d	= $(this).data();
+		getProdLineItems(d['fltr']);
+	});
+}
+
+function interim_load(ref_script_tag, types) {
+	this.i_log = function (message) {
+		try { console.log(message); }
+		catch(e){}
+	}
+
+	this.urlParams = '';
+	this.interim_types = new Array();
+
+	this.getUrlVars = function() {
+		var vars = {}, hash;
+		var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+		for(var i = 0; i < hashes.length; i++) {
+			hash = hashes[i].split('=');
+			var val = unescape(hash[1].replace(/\+/g,' '));
+			vars[hash[0]] = val;
+		}
+		return vars;
+	}
+
+	this.push_type = function(typ) {
+		var show = 0;
+		var aborted = 0;
+		var objCont = $("#"+typ); // Locate the div for this search type.
+		if(objCont.length != 1) { aborted = 1; } // Div doesn't exist? Abort the search type.
+		else if (!typ.match("_ajax$")) {
+			if ($.trim(objCont.html()) == '') { aborted = 1; } // No HTML to see? Abort the search type.
+			else { show = 1; } // Non-AJAX divs should show immediately.
+		}
+		var obj = { 'show' : show, 'displayed' : 0, 'aborted' : aborted, 'cont' : objCont };
+		this.interim_types.push(typ);
+		this.interim_types[typ] = obj;
+	}
+
+	this.canDisplay = function(typ) {
+		var canDisp = 0;
+		// Store the index of the occurrence that holds the passed-in search type.
+		var dispPos = $.inArray(typ,this.typeArray);
+		if (dispPos == 0) canDisp = 1; // We can always display the first position - no wait.
+		else if (dispPos > 0) {
+			// Find the search type that goes into the prior display position.
+			var prevTyp = this.typeArray[dispPos-1];
+			// Get the type object associated with the type
+			var prevTypObj = this.interim_types[prevTyp];
+			if (prevTypObj['displayed'] == 1 || prevTypObj['aborted'] == 1) { 
+				canDisp = 1;
+			}
+		}
+		return canDisp;
+	}
+
+	this.displayNoResults = function(html) {
+		if (html == '') {
+			var nr;
+			$.ajax({
+				url: 'search/noresults.php',
+				data: this.urlParams,
+				success: function (response, status) {
+					nr = response;
+					$("#srch_spinner").before(response);
+					$("#srch_spinner").remove();
+				}
+			});
+		} else {
+			$("#srch_spinner").before(html);
+			$("#srch_spinner").remove();
+		}
+	}
+
+	this.getNoResults = function() {
+		var oThis = this;
+		var prms = this.urlParams;
+		prms['typ'] = 'noresults';
+		var html = '';
+		// Do AJAX call.
+		$.ajax({
+			url: 'search/search_ajax.php',
+			dataType: 'get',
+			data: prms,
+			success: function (response, status) {
+				if (response.hasOwnProperty('ok') && response.ok == 1) {
+					oThis.displayNoResults(response.html);
+				} else { oThis.displayNoResults(''); }
+			},
+			error: function(data,status) { oThis.displayNoResults(''); }
+		})
+	}	
+	
+	this.showDivs = function(isAjax) {
+		var oThis = this;
+		this.typeArray.each(function(idx, val) {
+			if (oThis.interim_types.hasOwnProperty(val)) {
+				typObj = oThis.interim_types[val];
+				if (typObj['show'] == 1 && typObj['displayed'] == 0 && oThis.canDisplay(val)) {
+					typObj['displayed'] = 1;
+					typObj['cont'].slideDown('slow', function() {
+						oThis.showDivs();
+					});
+				}
+			}
+		});
+		// Check counts to see if we're done.
+		var itAborted = 0;
+		var itDisplayed = 0;
+		var itObj = this.interim_types;
+		var resulthd = '';
+		for (var i in itObj) {
+			if (itObj[i].aborted) {itAborted++; }
+			if (itObj[i].displayed) { itDisplayed++; }
+		}
+		// If we've got no more search types to display, do cleanup.
+		//this.i_log('itDisplayed: ' + itDisplayed + '       itAborted: ' + itAborted );
+		if (this.interim_types.length == (itDisplayed + itAborted)) {
+			//this.i_log(itObj);
+			if (itDisplayed == 0) {
+				oThis.getNoResults();
+				jsDCS['hierarchy_4'] = 'EMPTY';	// 3-30-2017 (RM 9561)
+			} else {
+				$("#srch_spinner").remove();
+				resulthd = 'There are results for "'+this.urlParams['what']+'" from '+itDisplayed+' ThomasNet.com application';
+				if(itDisplayed > 1)	{ resulthd += 's'; }
+			}
+			if(this.urlParams['which']=='all') { $('#interimhead').html(resulthd); }
+		}
+	}
+
+	this.execAjax = function(oThis,typ) {
+		var typObj = oThis.interim_types[typ];
+		var prms = oThis.urlParams;
+		prms['typ'] = typ;
+		var abortObj = function(typ) {
+			typObj.aborted = 1;
+		}
+		// Do AJAX call.
+		$.get(
+			'search/search_ajax.php',
+			prms,
+			function (response,status) {
+				if (response.hasOwnProperty('ok') && response.ok == 1 && response.html != '') {
+					typObj['cont'].html(response.html);
+					typObj['show'] = 1;
+				} else {
+					abortObj(typ);
+				}
+			},
+			'JSON'
+		)
+		.error(function(data,status) {
+			abortObj(typ); 
+		})
+		.complete(function(data,status) {
+			oThis.showDivs(1);
+		});
+	}
+
+	this.init = function(ref_script_tag, types) {
+		oThis = this;
+		$.ajaxSetup({'timeout': 5000 });
+		// Show spinner.
+		var spin = '<div id=\"srch_spinner\" style=\"text-align: center;\"><img src=\"//cdn.thomasnet.com/images/images/loading.gif\" alt=\"\" /></div>';
+		$(".srchrslts").last().after(spin);
+		// Make an array out of the search types.
+		this.typeArray = $(types.split(","));
+		// Store URL Params
+		this.urlParams = this.getUrlVars();
+
+//alert(this.urlParams['which']);
+		// Create buckets to corresond to the search type divs.
+		var oThis = this;
+		this.typeArray.each(function(idx, val) {
+			oThis.push_type(val);
+		});
+		// Show any divs that should be shown on load (non-AJAX).
+		this.showDivs();
+		// Kick off AJAX processes.
+		this.typeArray.each(function(idx, val) {
+			if (val.match("ajax$")) {
+				oThis.execAjax(oThis,val);
+			}
+		});
+		// Remove the script tag that kicked off this initialize.
+		$("#"+ref_script_tag).remove();
+	}
+
+	this.init(ref_script_tag,types);
+
+}
+
+function isEmail(str) {
+	// 10-21-2015 (RM 7594)
+	str	= str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+	var pattern = /.+@.+\..+/i;
+	return pattern.test(str);
+}
+
+function isEmpty(obj) {
+	for(var prop in obj) {
+		if(obj.hasOwnProperty(prop))
+			return false;
+	}
+	return true;
+}
+
+function isNumber(InString){
+	if(InString.length==0)
+		return (false);
+	var RefString="1234567890";
+	for (var Count=0; Count < InString.length; Count++)  {
+		TempChar= InString.substring (Count, Count+1);
+		if (RefString.indexOf (TempChar, 0)==-1)
+			return (false);
+		}
+	return (true);
+}
+
+function isNumeric (InString)  {
+	if(InString.length==0)
+		return (false);
+	RefString="1234567890.-";
+	for (Count=0; Count < InString.length; Count++)  {
+		TempChar= InString.substring (Count, Count+1);
+		if (RefString.indexOf (TempChar, 0)==-1)
+			return (false);
+	}
+	return (true);
+}
+
+function isPDF(filename){
+	var file_ext = filename.split('.').pop().toLowerCase();
+	file_ext	= file_ext.split('\?').shift();
+	file_ext	= file_ext.split('\#').shift();
+	return file_ext == 'pdf';
+}
+
+function isPdfSite(){
+	return false;	// 9-26-2017 launch of https
+	/*
+	var pdfsites = ['www.thomasnet.com','tnet.thomasnet.com','thomasnet.com'];
+	return in_array(location.hostname, pdfsites);
+	*/
+}
+
+function isRFIMaxOverride() { //RMCaterpillar //RM6917
+	if (typeof rfiMaxOverride === 'undefined') {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+function isValidPword(InString){
+	var hasnum	= 0;
+	if(InString.length < 6 || InString.length > 20)	{ return (false); }	// Password must be at least 6 and not longer than 20 chars
+
+	var pwRefString="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+	for (var Count=0; Count < InString.length; Count++)  {
+		TempChar= InString.substring (Count, Count+1);
+		if(pwRefString.indexOf(TempChar)==-1) {
+			//RM9657 alert('char:'+TempChar+'\n'+pwRefString+'\n'+pwRefString.indexOf(TempChar));
+			return (false);
+		}
+		if(isNumber(TempChar))	{ hasnum++; }
+	}
+	if(hasnum < 1)	{ return (false); }	// Password must contain a number
+	return (true);
+}
+
+function isValidUname(InString){
+	if(InString.length==0)
+		return (false);
+	RefString="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+	for (Count=0; Count < InString.length; Count++)  {
+		TempChar= InString.substring (Count, Count+1);
+		if (RefString.indexOf (TempChar, 0)==-1)
+			return (false);
+	}
+	return (true);
+}
+
+
+function ValidateZip(zipcode){	// 9-19-2017 (RM 10201)
+	if(typeof(zipcode)===undefined)	{ zipcode = ''; }
+	this.zip	= typeof(zipcode)===undefined ? '' : zipcode;
+
+	this.formatClean = function(){
+		// strip out non alphanumeric characters and change to uppercase
+		return this.zip.replace(/[^a-z0-9+]+/gi, '').toUpperCase();
+	}
+
+	this.formatDisplay = function(){
+		// reformat zip/postal code to #####, #####-####, XXX, or XXX XXX
+		var zipcode	= this.formatClean();
+		if(this.validUSA() && zipcode.length === 9){
+			return zipcode.toString().slice(0, 5) + '-' + zipcode.toString().slice(5);
+		//} else if(this.validCAN6()){	// should probably have the spave here, but db only stores 6 char in zip field
+		//	return zipcode.toString().slice(0, 3) + ' ' + zipcode.toString().slice(3)
+		} else if(this.valid()){
+			return zipcode;
+		} else {
+			return this.zip;
+		}
+	}
+
+	this.validCAN6 = function(){
+		// check for properly formatted 6 character Canadian postal code
+		chkZip	= new RegExp(/^([A-CEGHJ-NPRSTVXY]\d[A-CEGHJ-NPRSTV-Z]\d[A-CEGHJ-NPRSTV-Z]\d)$/);
+		return chkZip.test(this.formatClean());
+	}
+
+	this.validCAN = function(){
+		// check for properly formatted 3 or 6 character Canadian postal code
+		chkZip	= new RegExp(/^([A-CEGHJ-NPRSTVXY]\d[A-CEGHJ-NPRSTV-Z])$/);
+		return chkZip.test(this.formatClean()) || this.validCAN6();
+	}
+
+	this.validUSA5 = function(){
+		// check for properly formatted 5 digit US zip code
+		chkZip	= new RegExp(/^(\d{5}?)$/);
+		return chkZip.test(this.formatClean());
+	}
+
+	this.validUSA = function(){
+		// check for properly formatted 5 or 9 digit US zip code
+		chkZip	= new RegExp(/^(\d{9}?)$/);
+		return chkZip.test(this.formatClean()) || this.validUSA5();
+	}
+
+	this.valid = function(){
+		// check for properly formatted 5/9 digit US zip code OR 3/6 character Canadian postal code
+		return this.validUSA() || this.validCAN();
+	}
+
+	this.validLookup = function(){
+		// check for properly formatted 5 digit US zip code OR 6 character Canadian postal code
+		// used for db lookups such as autocomplete functions
+		return this.validUSA5() || this.validCAN6();
+	}
+}
+
+function JumpURL(selection) {
+	var tempIndex, selectedURL;
+	tempIndex = selection.selectedIndex;
+	selectedURL = selection.options[tempIndex].value;
+	location.href = selectedURL;
+}
+
+function makeFrag(str){
+	return str.replace(/\//g, ' ').replace(/[^a-z0-9 ]/gmi, '').replace(/\s+/g, '-').toLowerCase();
+}
+
+/** save supplier/shortlist begins **/
+
+function mtListedHTML(cid){
+	var url	= '<a href="'+ajxRoot+'/mythomas/shortlists.html?cid='+cid+'">';
+	url += '<img title="Shortlisted" alt="Shortlisted" src="//cdn.thomasnet.com/images/icons/shortlist_saved_off.png" />Shortlisted</a>';
+	return url;
+}
+
+function mtListHTML(cid, page, wtp){
+	var url	= '<a href="javascript:void(0);" onclick="mtShortlistSupplier(\''+cid+'\', \''+page+'\', \''+wtp+'\');">';
+	url += '<img title="Shortlist" alt="Shortlist" src="//cdn.thomasnet.com/images/icons/save_to_shortlist_off.png" />Shortlist</a>';
+	return url;
+}
+
+function mtLogOut(goto){
+	if(typeof(goto)==='undefined') goto = '';
+	$.ajax({
+		url: ajxRoot+"/mythomas/scripts/logout.php",  
+		dataType: "jsonp",
+		success: function (results) {
+			var newurl = goto ? goto : location.pathname+location.search;
+			location.href = newurl;
+			}
+		});
+}
+
+function mtPopLogin(mtform){
+	with(mtform){
+		uname.value	= trim(uname.value);
+		pword.value	= trim(pword.value);
+		if(!uname.value || !pword.value){
+			uname.focus();
+			$('#mtlogintxt').addClass('hide');
+			$('#mtloginerror').html('Email and Password are required');
+			$('#mtloginerror').removeClass('hide');
+			return false;
+		}
+		$.ajax({
+			url: ajxRoot+"/mythomas/scripts/login.php",
+			dataType: "jsonp",
+			data: { uname:uname.value, pword:pword.value },
+			success: function (results) {
+				tinid	= results.response;
+				if(tinid=='Failed'){
+					$('#mtloginerror').html('Incorrect Email Address or Password');
+					$('#mtloginerror').removeClass('hide');
+				} else if(mt.value=='SaveCopro' && cid.value){
+					$.ajax({
+						url: ajxRoot+"/mythomas/scripts/save-copro.php",  
+						dataType: "jsonp",
+						data: { cid:cid.value, tinid:tinid, url:url.value },
+						success: function (results) {
+							if(wtp.value) {
+								setTlmUtagLink(wtp.value);
+							}
+							top.location.href	= url.value;
+						}
+					});
+				} else if(mt.value=='SaveResults' && url.value){
+					$.ajax({
+						url: ajxRoot+"/mythomas/scripts/save-search.php",  
+						dataType: "jsonp",
+						data: { tinid:tinid, url:url.value },
+						success: function (results) {
+							if(wtp.value) {	/** 10-26-2016 (RM 8984) **/
+								setTlmUtagLink(wtp.value);
+							}
+							top.location.href	= url.value;
+						}
+					});
+				} else if(url.value) {
+					top.location.href	= url.value;
+				}
+			}
+		});
+	}
+}
+
+function mtSaveCopro(cid, contentid, wtp){
+	if(cid && loggedin){
+		var subid	= '';
+		if(contentid=='mtfeatsupp'){
+			subid	= 'mtsc'+cid;
+		}
+		if(contentid=='mtcoprotxt' || contentid=='ulsave_for_shortlist'){
+			$('#ulsave_for_shortlist').html('<img src="//cdn.thomasnet.com/images/icons/ajax-loader-16.gif" alt="Saving" />');
+			$('#mtcoprotxt').html('<span class="gray">Saving...</span>');
+		} else {
+			$('#'+contentid).html('<span class="gray">Saving...</span>');
+		}
+		$.ajax({
+			url: ajxRoot+"/mythomas/scripts/save-copro.php",
+			dataType: "jsonp",
+			data: { cid:cid, tinid:tinid, url:location.pathname+location.search },
+			success: function (results) {
+				var response	= results.response;
+				if(response=='Saved'){
+					if(wtp) {
+						setTlmUtagLink(wtp);
+					}
+					if(contentid=='mtcoprotxt' || contentid=='ulsave_for_shortlist'){
+						$('#ulsave_for_shortlist').html('<a href="/mythomas/saved_suppliers.html"><img src="//cdn.thomasnet.com/images/icons/saved_for_shortlist.png" alt="Saved Suppliers" title="Saved Suppliers" /></a>').addClass('dkgreen');
+						$('#mtcoprotxt').html('<a href="/mythomas/saved_suppliers.html"><img src="//cdn.thomasnet.com/images/mythomas/saved_for_shortlist.png" alt="Saved Suppliers" title="Saved Suppliers" />Saved</a>').addClass('dkgreen');
+					} else if(contentid=='cphmt') {
+						 top.location.href	= location.pathname+location.search;
+					} else {
+						$('#'+contentid).html('<a href="/mythomas/saved_suppliers.html"><img src="//cdn.thomasnet.com/images/mythomas/saved_for_shortlist.png" alt="Saved Suppliers" title="Saved Suppliers" />Saved</a>').addClass('dkgreen');
+					}
+					if(subid && $('#'+subid).length){
+						$('#'+subid).html('<a href="/mythomas/saved_suppliers.html"><img src="//cdn.thomasnet.com/images/mythomas/saved_for_shortlist.png" alt="Saved Suppliers" title="Saved Suppliers" />Saved</a>').addClass('dkgreen');
+					}
+					if(!getCookie('slnoconf')){
+						// The Success message displayed here says "...have been added to the following shortlists", but
+						// no shortlists are listed.
+						if (window.cb2017 !== undefined) { //RM9563
+							$.colorbox({href:'/mythomas/confirm_shortlist.html', innerWidth:353, innerHeight:120, iframe:false});
+						} else {
+							$.colorbox({title:'Success', href:'/mythomas/confirm_shortlist.html', width:425, height:375, iframe:false});
+						}
+					}
+				}
+			}
+		});
+	} else if(cid && !loggedin){
+		var params	= 'mt=SaveCopro&rp=1&cid='+cid+'&url='+escape(location.pathname+location.search);
+		if(wtp)	{ params += '&wtp='+escape(wtp); }
+		$.colorbox({title:'', href:'/mythomas/login_popup.html?'+params, width:logw, height:logh, iframe:true});
+	}
+}
+
+function mtSaveCoProLogin(cid, wtp) {
+	var params  = 'mt=SaveCopro&rp=1&cid='+cid+'&url='+escape(location.href);
+	if(wtp) { params += '&wtp='+escape(wtp); }
+	$.colorbox({title:'', href:ajxRoot+'/mythomas/login_popup.html?'+params, width:logw, height:logh, iframe:true});
+}
+
+function mtSavedCoproBtns(cid, page, lists, wtp){
+	var btns	= '<a href="'+ajxRoot+'/mythomas/saved_suppliers.html">';
+	
+	if(page=='copro17'){
+
+		btns += '<img id="btn_save" src="//cdn.thomasnet.com/images/images/saved_supplier_off.png" class="imgrollover" alt="Saved"></a>';
+		
+		if(lists > 0){
+			btns += '<a href="'+ajxRoot+'/mythomas/shortlists.html?cid='+cid+'">';
+			btns += '<img id="btn_shortlist" src="//cdn.thomasnet.com/images/images/shortlisted_off.png" class="imgrollover" alt="Shortlisted"></a>';
+		} else {
+			btns += '<a href="javascript:void(0);" onclick="mtShortlistSupplier(\''+cid+'\',\''+page+'\',\''+wtp+'\');">';
+			btns += '<img id="btn_shortlist" src="//cdn.thomasnet.com/images/images/add_to_shortlist_off.png" class="imgrollover" alt="Add To Shortlist"></a>';
+		}
+		
+	} else if(page=='copro9687'){
+
+		btns = '<a id="btn_save" href="'+ajxRoot+'/mythomas/saved_suppliers.html" class="saved">Saved</a><span class="sep"> | </span>';
+		
+		if(lists > 0){
+			btns += '<a href="'+ajxRoot+'/mythomas/shortlists.html?cid='+cid+'" class="saved" id="btn_shortlist" >Shortlisted</a>';
+		} else {
+			btns += '<a id="btn_shortlist" href="javascript:void(0);" onclick="mtShortlistSupplier(\''+cid+'\',\''+page+'\',\''+wtp+'\');"><span class="symbol"></span>Add To Shortlist</a>';
+		}
+		
+	} else {
+
+		btns += '<img title="Saved Supplier" alt="Saved Supplier" src="//cdn.thomasnet.com/images/buttons/saved_supplier_btn_off.png" class="imgrollover leftbtn" /></a>';
+		if(lists > 0){
+			btns += '<a href="'+ajxRoot+'/mythomas/shortlists.html?cid='+cid+'">';
+			btns += '<img title="Shortlisted" alt="Shortlisted" src="//cdn.thomasnet.com/images/buttons/view_shortlist_btn_off.png" class="imgrollover" /></a>';
+		} else {
+			btns += '<a href="javascript:void(0);" onclick="mtShortlistSupplier(\''+cid+'\',\''+page+'\',\''+wtp+'\');">';
+			btns += '<img title="Shortlist" alt="Shortlist" src="//cdn.thomasnet.com/images/buttons/add_to_shortlist_btn_off.png" class="imgrollover" /></a>';
+		}
+	}
+	return btns;
+}
+
+function mtSavedHTML(cid){
+	var url	= '<a href="'+ajxRoot+'/mythomas/saved_suppliers.html">';
+	url += '<img title="Saved" alt="Saved" src="//cdn.thomasnet.com/images/icons/saved_supplier_off.png" />Saved</a>';
+	return url;
+}
+
+function mtSaveResults(contentid, wtp){
+	if(contentid && loggedin){
+		$('#'+contentid).html('<img src="//cdn.thomasnet.com/images/icons/ajax-loader-16.gif" alt="Saving" />');
+		$.ajax({
+			url: ajxRoot+"/mythomas/scripts/save-search.php",  
+			dataType: "jsonp",
+			data: { tinid:tinid, url:location.pathname+location.search },
+			success: function (results) {
+				var response	= results.response;
+				if(response=='Saved'){
+					if(wtp) {	/** 10-26-2016 (RM 8984) **/
+						setTlmUtagLink(wtp);
+					}
+					$('#'+contentid).html('<a href="/mythomas/saved_searches.html"><img src="//cdn.thomasnet.com/images/icons/saved.png" alt="Saved Searches" title="Saved Searches" /></a>');
+				}
+			}
+		});
+	} else if(contentid && !loggedin){
+		var params	= 'mt=SaveResults&rp=1&url='+escape(location.pathname+location.search);
+		if(wtp)	{ params += '&wtp='+escape(wtp); }	/** 10-26-2016 (RM 8984) **/
+		if (window.cb2017 !== undefined) { //RM9563
+			$.colorbox({title:'', href:'/mythomas/login_popup.html?'+params, innerWidth:670, innerHeight:350, iframe:true});
+		} else {
+			$.colorbox({title:'', href:'/mythomas/login_popup.html?'+params, width:logw, height:logh, iframe:true});
+		}
+	}
+}
+
+function mtSaveSupplier(cid, page, wtp, el){
+	if(!cid)	{ return false; }
+	var savecontainer	= page=='copro' ? '#coprosave' : '.save-'+cid;
+	var listcontainer	= '.list-'+cid;
+	var paramobj	= parseQueryString(wtp);
+	if(typeof paramobj['featCID']!="undefined"){
+		featCID(paramobj['featCID']);
+	}
+
+	// 1/24/2018 (rw-active)
+	$('body').addClass('rw-active');
+
+	if(loggedin){
+		if(page=='copro17'){
+			$('#savebtns img').addClass('waiting');
+		} else if(page=='copro9687'){
+			$('#save-list a').addClass('waiting');
+		} else if(page=='copro'){
+			$(savecontainer).html('Saving&hellip;').addClass('gray').addClass('center');
+		} else {
+			$(savecontainer).html('Saving&hellip;').addClass('gray');
+		}
+		$.ajax({
+			url: ajxRoot+'/mythomas/scripts/save-supplier.php',
+			dataType: "jsonp",
+			data: { cids:cid, tinid:tinid, url:location.href },
+			success: function (results) {
+				var response = results.response;
+				if(response=='Saved'){
+					if(wtp)	{
+						setTlmUtagLink(wtp);
+					}
+					try{__adroll.record_user({"adroll_segments": "e10c2e61"})} catch(err) {} /* RM 7327 */
+
+					/* sc=1 param indicates "supplier confirmation". It tells "add to shortlist" page whether or not the supplier(s)
+					passed in the cids param was/were just saved, requiring a "(company name) has been added" confirmation message. */
+					var url = "/mythomas/add_to_shortlist.html?cids=" + cid +"&sc=1&wtp="+escape(wtp)+"&ofunc=savesupp";
+					cbTitle = window.cb2017 !== undefined ? undefined : ''; //RM9563
+					$.colorbox({
+						//title:'',
+						title:cbTitle, //RM9563
+						href:url,
+						width: 500,
+						iframe:false,
+						maxHeight: 500,
+						onComplete: function() { $.colorbox.resize(); },
+						onClosed: function() {
+							/* find out if supplier was shortlisted, change icons accordingly */
+							$.ajax({
+								url: '/mythomas/scripts/count-shortlists.php',
+								dataType: "jsonp",
+								data: { cid:cid, tinid:tinid },
+								success: function (results) {
+									var lists = results.lists;
+									if(page=='copro17'){
+										$('#savebtns').html(mtSavedCoproBtns(cid, page, lists, wtp));
+										$('#savebtns img').removeClass('waiting');
+									} else if(page=='copro9687'){
+										$('#save-list').html(mtSavedCoproBtns(cid, page, lists, wtp));
+										$('#save-list a').removeClass('waiting');
+									} else if(page=='copro'){
+										$(savecontainer).removeClass('gray').removeClass('center').html(mtSavedCoproBtns(cid, page, lists, wtp));
+									} else if(page=='results17'){
+										if(lists > 0){
+											$(el).find('.saveshortlist').addClass('hide');
+											$(el).find('.shortlist').addClass('hide');
+											$(el).find('.shortlisted').removeClass('hide');
+										} else {
+											$(el).find('.shortlist').addClass('hide');
+											$(el).find('.shortlisted').addClass('hide');
+											$(el).find('.saveshortlist').removeClass('hide');
+										}
+										$(el).find('.save').addClass('hide');
+										$(el).find('.saved').removeClass('hide');
+									} else {
+										$(savecontainer).removeClass('gray').html(mtSavedHTML(cid));
+										if(lists > 0){
+											$(listcontainer).html(mtListedHTML(cid));
+										} else {
+											$(listcontainer).html(mtListHTML(cid, page, wtp));
+										}
+									}
+								}
+							});
+						}
+					});
+				}
+			}
+		});
+	} else {
+		var params  = 'mt=SaveCopro&rp=1&cid='+cid+'&url='+escape(location.href);
+		if(wtp) { params += '&wtp='+escape(wtp); }
+		rwOpen('savesupp', 'To save or shortlist suppliers', params, page);
+	}
+}
+
+function mtShortlistSupplier(cid, page, wtp, el){
+	if(!cid)	{ return false; }
+	var listcontainer	= page=='copro' ? '#coprosave' : '.list-'+cid;
+	var paramobj	= parseQueryString(wtp);
+	if(typeof paramobj['featCID']!="undefined"){
+		featCID(paramobj['featCID']);
+	}
+
+	// 1/24/2018 (rw-active)
+	$('body').addClass('rw-active');
+
+	if(loggedin){
+		if(page=='copro17'){
+			$('#savebtns img').addClass('waiting');
+		} else if(page=='copro9687'){
+			$('#save-list a').addClass('waiting');
+		} else if(page=='copro'){
+			$(listcontainer).html('Saving&hellip;').addClass('gray').addClass('center');
+		} else {
+			$(listcontainer).html('Saving&hellip;').addClass('gray');
+		}
+		
+		var url = "/mythomas/add_to_shortlist.html?cids=" + cid +"&wtp="+escape(wtp);
+		cbTitle = window.cb2017 !== undefined ? undefined : ''; //RM9563
+		$.colorbox({
+		    //title:'', //RM9563
+			title:cbTitle, //RM9563
+			href:url,
+			width: 500,
+			iframe:false,
+			maxHeight: 500,
+			onComplete: function() { $.colorbox.resize(); },
+			onClosed: function() {
+				/* find out if supplier was shortlisted, change icons accordingly */
+				$.ajax({
+					url: '/mythomas/scripts/count-shortlists.php',
+					dataType: "jsonp",
+					data: { cid:cid, tinid:tinid },
+					success: function (results) {
+						try{__adroll.record_user({"adroll_segments": "cc270ad5"})} catch(err) {} /* RM 7327 */
+						var lists = results.lists;
+						if(page=='copro17'){
+							$('#savebtns').html(mtSavedCoproBtns(cid, page, lists, wtp));
+							$('#savebtns img').removeClass('waiting');
+						} else if(page=='copro9687'){
+							$('#save-list').html(mtSavedCoproBtns(cid, page, lists, wtp));
+							$('#save-list a').removeClass('waiting');
+						} else if(page=='copro'){
+							$(listcontainer).removeClass('gray').removeClass('center').html(mtSavedCoproBtns(cid, page, lists, wtp));
+						} else if(page=='results17'){
+							if(lists > 0){
+								$(el).find('.saveshortlist').addClass('hide');
+								$(el).find('.shortlist').addClass('hide');
+								$(el).find('.shortlisted').removeClass('hide');
+							} else {
+								$(el).find('.shortlist').addClass('hide');
+								$(el).find('.shortlisted').addClass('hide');
+								$(el).find('.saveshortlist').removeClass('hide');
+							}
+							$(el).find('.save').addClass('hide');
+							$(el).find('.saved').removeClass('hide');
+						} else {
+							if(lists > 0){
+								$(listcontainer).html(mtListedHTML(cid));
+							} else {
+								$(listcontainer).html(mtListHTML(cid, page, wtp));
+							}
+						}
+					}
+				});
+			}
+		});
+	} else {
+		alert('Need to log in');	// user should never get here
+	}
+}
+
+
+/** save supplier/shortlist ends **/
+
+function mtSelectRow(chkbox){
+	if(chkbox.value == 1){
+		var tbl = $(chkbox).closest(".mythomas_table"); //RM7050
+		if(chkbox.checked) {
+			$('table.mthistory tr:first').nextAll('tr').addClass("hlcompare");
+			tbl.find('tr:first').nextAll('tr').addClass("hlcompare"); //RM7050
+		} else {
+			$('table.mthistory tr:first').nextAll('tr').removeClass("hlcompare");
+			tbl.find('tr:first').nextAll('tr').removeClass("hlcompare"); //RM7050
+		}
+	} else {
+		var rowid  = "row"+chkbox.value;
+		if(chkbox.checked){
+			$("#"+rowid).addClass("hlcompare");
+		} else {
+			$("#"+rowid).removeClass("hlcompare");
+		}
+	}
+}
+
+var parseQueryString = function ( queryString ) {
+	var params = {}, queries, temp, i, l;
+	//queryString	= decodeURIComponent(queryString);
+	//queryString	= queryString.replace(/&amp;/g, '&');
+
+	queries = queryString.split("&");
+
+	for ( i = 0, l = queries.length; i < l; i++ ) {
+		temp = queries[i].split('=');
+		var fldname	= temp.shift();
+		params[fldname] = temp.join('=');
+	}
+	return params;
+}
+
+function pgnavHover(el, type, stat){
+	var imgid	= type+"pg";
+	var classnm	= "";
+	if(stat=="on"){ classnm = "pghover"; }
+	el.className	= classnm;
+	$('#'+imgid).attr('src', '//cdn.thomasnet.com/images/images/'+type+'_'+stat+'.png');
+}
+
+function popWin(url, name, width, height){
+	var pw	= window.open(url,name,'toolbar=0,location=0,status=0,menubar=0,scrollbars=1,resizable=1,width='+width+',height='+height);
+	pw.focus();
+}
+
+function preSelComps(rank){
+	// shove all previously selected companies in array.
+	var selno = 0;
+	var preselco = !isEmpty($.cookie('_selco')) ? $.cookie('_selco') : '';
+	var preseldata = preselco.split("|");
+	for(x=0; x < preseldata.length; x++){
+		var idpos = preseldata[x].indexOf('-');
+		var copos = preseldata[x].indexOf('-', idpos+1);
+		var rk = preseldata[x].substring(0,idpos);
+		var id = preseldata[x].substring(idpos+1,copos);
+		var nm = preseldata[x].substring(copos+1);
+		if(rank != rk && id){ coselect[rk] = id+"-"+nm; selno++; }
+	}
+}
+
+function ps_integration_load(srchstr) {
+
+	function get_psib(srchstr) {
+		var prox = pos - $(window).scrollTop();
+		if (prox < 2000 && !psib_launched) {
+			psib_launched = 1; // Stop scrolling acton from kicking off AJAX process more than once.
+			var spin = '<div id="psib_spin_tr" style="text-align: center;"><img src="//cdn.thomasnet.com/images/images/loading.gif" alt="" /></div>';
+			$('#ps_integration_block').before(spin);
+			$.get(
+				'/gateway/ps_integration_block_ajax.php',
+				{ srchstr: srchstr },
+				function (response) {
+					if (response.hasOwnProperty('ok') && response.ok == 1) {
+						if (response.html != '') {
+							var html = response.html;
+							$('script#ps_integration_block').after(html);
+						}
+					}
+				},
+				'JSON'
+			)
+			.complete(function() { $('#psib_spin_tr').remove(); });
+		}
+	}
+
+	var ws = $('script#ps_integration_block');
+	if (srchstr == 'undefined' || !ws.length ) return false; 
+	var psib_launched = 0;
+	$('script#ps_integration_block').before("<span class=\"psib_loc\"></span>");
+	var pos = $(".psib_loc").offset().top;
+	$(".psib_loc").remove();
+	get_psib(srchstr);
+	$(window).scroll(function () { get_psib(srchstr); });
+}
+
+function qsFromObj(paramobj){
+	var params = {};
+	if(isEmpty(paramobj))	{ return; }
+	keys = Object.keys(paramobj),
+  	i, len = keys.length;
+
+	keys.sort();
+
+	for (i = 0; i < len; i++) {
+		k = keys[i];
+		if(!isEmpty(paramobj[k])){
+			params[k] = decodeURIComponent(paramobj[k].replace(/\+/g, '%20'));
+		}
+	}
+	return $.param(params);
+}
+
+var removeQsParam = function ( queryString, paramName ) {
+	var params = new Array(), newval, fld;
+
+	var paramobj	= parseQueryString(queryString);
+	for (var fld in paramobj) {
+		if (paramobj.hasOwnProperty(fld)) {
+			if(fld != paramName){
+				newval	= encodeURIComponent(paramobj[fld]);
+				//alert(fld+'='+newval);
+				params.push(fld+'='+newval);
+			}
+		}
+	}
+	return params.join('&');
+}
+
+function reqInfoChk(chkbox,rowid){
+	var selected	= 0;
+	with(document.reqinfo){
+		for(var i = 0; i < elements.length; i++){
+			if(elements[i].type=="checkbox" && elements[i].name.substring(0,8)=="riselect" && elements[i].checked){
+				selected++;
+			}
+		}
+	}
+	var maxSelect = rfiMaxSelections(); //RMCaterpillar //RM6917
+	//if(selected > 5){ //RMCaterpillar //RM6917
+	if(selected > maxSelect){ //RMCaterpillar //RM6917
+		msg = "Please select between 1 and " + maxSelect + " products to Request Information.\n";
+		msg += "To contact more than " + maxSelect + " companies, click Request a Quote to proceed, and then select Contact Additional Suppliers.";
+		alert(msg);
+		chkbox.checked = 0;
+	}
+}
+
+function resizeIframe(iframe) {
+	iframe.height	= iframe.contentWindow.document.body.scrollHeight + "px";
+}
+
+function rfi_Multi(qs) {
+	// Get cids stored in the _selco cookie.
+	var preselco = !isEmpty($.cookie('_selco')) ? $.cookie('_selco').split("|") : '';
+	// We want the middle of the three dash-delimited values in each array occurrence.
+	// Original unique() method stopped working - no idea why, using th separate $.unique(ary) JQuery function. //RM9263
+	//var cids = $(preselco).map(function() { if (this.length) { return this.match(/-(.*?)-/)[1]; }}).get().unique(); //RM9263
+	var cids = $(preselco).map(function() { if (this.length) { return this.match(/-(.*?)-/)[1]; }}).get(); //RM9263
+	cids = $.unique(cids); //RM9263
+	if(cids.length < 1) { alert("You have not selected any companies yet."); }
+    else {
+        var url = ajxRoot + "/rfi/rfi_main.html?WTZO=" + encodeURIComponent("Suppliers Search Results") + "&" + qs + "&cids=" + cids.join(',');
+        //if (window.isRM9792 !== undefined) { //RM9792
+        location.href = url; //RM9792
+        //} else {
+        //    window.open(url, 'rfi').focus();
+        //}
+	}
+}
+
+function rfi_reqInfoSubmit(qs,genMsg) {
+	// qs: Query string (NOT beginning with '&') to be appended to the params dynamically prepared in this function.
+	// genMsg: Determines whether to gather, format, and pass items in a message param. 0=no, 1=yes
+	if(typeof(qs)==='undefined') qs = '';
+	if(typeof(genMsg)==='undefined') genMsg = 0;
+	var selections = $("input[name='riselect[]']:checked");
+	var maxSelect = rfiMaxSelections(); //RMCaterpillar //RM6917
+	if(selections.length > maxSelect || selections.length < 1) { alert("Please select between 1 and " + maxSelect + " products to Request Information."); }
+	else {
+		// Original unique() method stopped working - no idea why, using the separate $.unique(ary) JQuery function. //RM9263
+		//var cids = selections.map(function() { return this.value.split('|')[0]; }).get().unique().join(','); //RM9263
+		var cids = selections.map(function() { return this.value.split('|')[0]; }).get(); //RM9263
+		cids = $.unique(cids).join(','); //RM9263
+
+		var message = '';
+		if (genMsg) {
+			message = selections.map(function() {
+				var itm = this.value.split('|')[1];
+				return itm.replace(/: [0-9]+$/g,""); // Chop off stuff after the product name when launch page is productdetail.html.
+			}).get().join('<br />');
+			message = "&message=" + encodeURIComponent(message);
+		}
+		if (qs.length) { qs = '&' + qs; }
+		var url = ajxRoot + "/rfi/rfi_main.html?sas=N&cids=" + cids + message + qs; //RM3057
+		//if (window.isRM9792 !== undefined) { //RM9792
+        location.href = url; //RM9792
+        //} else {
+        //    window.open(url, 'rfi').focus();
+        //}
+	}
+}
+
+function rfi_rfqMulti(qs){
+	if(typeof(qs)==='undefined') qs = '';
+	if (qs.length) { qs = '&' + qs; }
+	// Original unique() method stopped working - no idea why, using th separate $.unique(ary) JQuery function. //RM7166
+	//var cids = $("input[name='multi[]']:checked").map(function() { return this.value; }).get().unique(); //RM7166
+	var cids = $("input[name='multi[]']:checked").map(function() { return this.value; }).get(); //RM7166
+	cids = $.unique(cids); //RM7166
+	if(cids.length < 1) { alert("You have not selected any companies yet."); }
+	else {	
+		var url = ajxRoot + "/rfi/rfi_main.html?WTZO=" + encodeURIComponent("Supplier Compare") + "&cids=" + cids.join(',') + qs;
+		//if (window.isRM9792 !== undefined) { //RM9792
+        location.href = url; //RM9792
+        //} else {
+        //    window.open(url, 'rfi').focus();
+        //}
+		return false;
+	}
+}
+
+function rfiMaxSelections() {	//RMCaterpillar //RM6917
+	var maxSelect = 0;
+	if (typeof rfiMaxOverride === 'undefined') { maxSelect = 5; }
+	else { maxSelect = rfiMaxOverride; }
+	return maxSelect;
+}
+
+function rfqSuppliers(){
+	//alert("This feature is not available yet");
+	var selno = 0;
+	var preselco = !isEmpty($.cookie('_selco')) ? $.cookie('_selco') : '';
+	var preseldata = preselco.split("|");
+	var multirfq = new Array();
+	for(x=0; x < preseldata.length; x++){
+		var idpos = preseldata[x].indexOf('-');
+		var copos = preseldata[x].indexOf('-', idpos+1);
+		var rk = preseldata[x].substring(0,idpos);
+		var id = preseldata[x].substring(idpos+1,copos);
+		var nm = preseldata[x].substring(copos+1);
+		if(id){
+			multirfq[selno] = id;
+			selno++;
+		}
+	}
+	if(selno < 1){ alert("You have not selected any companies yet."); }
+	else	{
+		document.comparesupp.multirfq.value = multirfq;
+		document.comparesupp.submit();
+	}
+}
+
+function rollImage(id){
+	var curimg	= $('#'+id).attr('src');
+	var newimg	= curimg.replace('normal','rollover');
+	if(newimg==curimg)	{ newimg = curimg.replace('rollover','normal'); }
+	$('#'+id).attr('src', newimg);
+}
+
+var setTlmUtagLink = function ( queryString, eventType ) {
+	var tlmTags	= getTlmTagsFromQS(queryString, eventType);
+	if(!isEmpty(tlmTags) && useTlm==1)	{
+		if(typeof utag_data['client_ip']!="undefined" && typeof tlmTags['client_ip']=="undefined"){
+			tlmTags['client_ip']	= utag_data['client_ip'];
+		}
+		if(typeof utag_data['servercallhost']!="undefined" && typeof tlmTags['servercallhost']=="undefined"){
+			tlmTags['servercallhost']	= utag_data['servercallhost'];
+		}
+
+		utag.link(tlmTags);
+		//alert(JSON.stringify(tlmTags, null, 2));
+	}
+}
+
+function showAddlSupps(cov, heading, allaccts){
+	// 4-18-2017 (RM 9638(
+	$.ajax({
+		url: ajxRoot+'/search/additional_suppliers.php',
+		method: "get",
+		dataType: "html",
+		data: { cov:cov, heading:heading, allaccts:allaccts},
+		success: function (results) {
+			if(results){
+				$('#xas').html(results);
+				$('a[data-event_type="ilink"]').click(function(){
+					var d	= $(this).data();
+					document.cookie = "ad_click=" +escape(d['ad_click']) + '; domain=.thomasnet.com' + '; path=/';
+				});
+				jsDCS['ad_impression']	= utag_data['ad_impression'];
+				jsDCS['ad_impression'].push('AS');
+				utag.view(jsDCS);
+			}
+		}
+	});
+}
+
+/* // 2017-02-16 (G.S.) Commented due to function being part of a set of dup functions.
+function showSelComps(){
+	var cohtml = ihtml = "";
+	var preselco = !isEmpty($.cookie('_selco')) ? $.cookie('_selco') : '';
+	var preseldata	= preselco.split("|");
+	for(x=0; x < preseldata.length; x++){
+		var idpos	= preseldata[x].indexOf('-');
+		var copos	= preseldata[x].indexOf('-', idpos+1);
+		var rk	= preseldata[x].substring(0,idpos);
+		var id	= preseldata[x].substring(idpos+1,copos);
+		var nm	= preseldata[x].substring(copos+1);
+		nm	= nm.replace(/\+/g, ' ')
+		if(id && nm){
+			cohtml += "<a href=\"#\" onclick=\"delSelComp('"+id+"','"+rk+"');\"><img src=\"//cdn.thomasnet.com/images/images/undomod.gif\" class=\"undo\" alt=\"Undo\"></a> "+nm+"<br />\n";
+		}
+	}
+	if(cohtml)	{
+		ihtml	= "<div class=\"selcomp\"><span class=\"orangetxt\">Suppliers Selected</span><br />\n";
+		ihtml  += cohtml;
+		if(x > 1){ ihtml  += "<div id=\"compbtn\">"+compBtn+"</div>"; }
+		ihtml  += "</div>\n";
+		$("#complist").html(ihtml).show();
+	} else {
+		$("#complist").hide();
+	}
+}
+*/
+
+function showSelCookie(){
+	var newselco = "";
+	for (var key in coselect) {
+		if (coselect.hasOwnProperty(key) && coselect[key]) {
+			var data = coselect[key];
+			if(newselco){ newselco += "|"; }
+			newselco += key+"-"+data;
+		}
+	}
+	$.cookie('_selco', newselco, { path: '/', domain: '.thomasnet.com' });
+}
+
+function swapInline(show, noshow){
+	$('#'+show).css("display","inline");
+	$('#'+noshow).css("display","none");
+}
+
+function swapMenu(show, noshow) {
+	$('#'+show).css("display","block");
+	$('#'+noshow).css("display","none");
+}
+
+function swapOnMouseOver(img){
+	img.src=img.src.replace("_off", "_on");
+}
+function swapOnMouseOut(img){
+	img.src=img.src.replace("_on", "_off");
+}
+
+var tnetModal = (function(){
+	var 
+	method = {},
+	$overlay,
+	$modal,
+	$content;
+
+	// Center the modal in the viewport
+	method.center = function () {
+		var top, left;
+
+		top = Math.max($(window).height() - $modal.outerHeight(), 0) / 2;
+		left = Math.max($(window).width() - $modal.outerWidth(), 0) / 2;
+		$modal.css({
+			top:top + $(window).scrollTop(), 
+			left:left + $(window).scrollLeft()
+		});
+	};
+
+	// Open the modal
+	method.open = function (settings) {
+		$content.empty().append(settings.content);
+
+		$modal.css({
+			width: settings.width || 'auto', 
+			height: settings.height || 'auto'
+		});
+
+		method.center();
+		$(window).bind('resize.modal', method.center);
+		$modal.show();
+		$overlay.show();
+	};
+
+	method.close = function () {
+		$modal.hide();
+		$overlay.hide();
+		$content.empty();
+		$(window).unbind('resize.modal');
+	};
+
+	// Generate the HTML and add it to the document
+	$overlay = $('<div class="modaloverlay"></div>');
+	$modal = $('<div class="modalwrap"></div>');
+	$content = $('<div class="modalcontent"></div>');
+
+	$modal.hide();
+	$overlay.hide();
+	$modal.append($content);
+
+	$(document).ready(function(){
+		var $target = $(".legacy-content");
+		
+		//Fall back to body if legacy-content is not found.
+		//Uncomment the following if overlay needs to be appended to body.		
+		// if(!$target.length) {
+		// 	$target = $("body");
+		// }
+
+		if($target.length) {
+			$target.first().append($overlay, $modal);
+		}
+	});
+	return method;
+}());
+
+function tnPopRegPrompt(goto,regtype){
+	if(!goto)	{ goto = tnsRoot+location.pathname+location.search; }
+	var params	= 'rp=1&url='+escape(goto);
+	if(regtype!='')	{ params+='&rt='+regtype; }
+	if (window.cb2017 !== undefined) { //RM9563
+	   $.colorbox({href:ajxRoot+'/mythomas/login_popup.html?'+params, innerWidth:670, innerHeight:350, iframe:true, escKey:false});
+    } else {
+       $.colorbox({title:'', href:ajxRoot+'/mythomas/login_popup.html?'+params, width:logw, height:logh, iframe:true, escKey:false});
+    }
+}
+
+
+
+function toggleDisplay (el) {
+	$('#'+el).slideToggle();
+}
+
+function toggleModGroup(groupid){
+	var icon	= $('#'+groupid).is(':visible') ? 'right' : 'down';
+	$('#'+groupid+'-img').attr('src', '//cdn.thomasnet.com/images/images/gray_arrow_'+icon+'.gif');
+	$('#'+groupid).slideToggle();
+}
+
+function toggleModGroupPM(groupid){
+	var curadir	= "";
+	var curdisp	= document.getElementById(groupid).style.display;
+	if(curdisp!="block"){
+		curdisp	= "block";
+		curadir	= "minus";
+	} else {
+		curdisp	= "none";
+		curadir	= "plus";
+	}
+	var imgid	= groupid+"-img";
+	var arrow	= "//cdn.thomasnet.com/images/icons/"+curadir+"10.png";
+	document.getElementById(groupid).style.display	= curdisp;
+	document.getElementById(imgid).src	= arrow;
+}
+
+
+function togglePlusMinBox (el){
+	var pmimgid	= "pm-"+el;
+	var pmbodyid	= "body-"+el;
+	var imgsrc	= $('#'+pmimgid).attr('src');
+
+	if(imgsrc.indexOf("plus") > 0){
+		$('#'+pmimgid).attr('src', imgsrc.replace('plus','minus'));
+		$('#'+pmbodyid).show();
+	} else {
+		$('#'+pmimgid).attr('src', imgsrc.replace('minus','plus'));
+		$('#'+pmbodyid).hide();
+	}
+}
+
+function trim(str) {
+	return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+function userLogOut(goto){
+	if(typeof(goto)==='undefined') { goto = ''; }
+	$.ajax({
+		url: ajxRoot+"/scripts/account-logout.php",
+		dataType: "jsonp",
+		success: function (results) {
+			var newurl = goto ? goto : location.pathname+location.search;
+			location.href = newurl;
+		}
+	});
+}
+
+function validKwSearch(){
+	var kwhat	= $.trim($('#kwhat').prop('value'));
+	if(kwhat=='' || kwhat==$('#kwhat').attr('placeholder')){
+		alert('Please enter a keyword');
+		$('#kwhat').focus();
+		return false;
+	}
+}
+
+function validMtSearchList(mtform){
+	with(mtform){
+		var checked = 0;
+		var whattags = [];
+		var covtags = [];
+		var hdtags = [];
+		for (var i = 0; i < elements.length; i++) {
+			if(elements[i].name.substring(0,4)=="mtid" && elements[i].checked){ 
+				var chkbox	= elements[i];
+				if(!isEmpty($(chkbox).attr('data-info'))){	// 5-23-2016 (RM 8411)
+					var info = $(chkbox).attr('data-info').split("||");
+					whattags.push(info[0]);
+					covtags.push(info[1]);
+					hdtags.push(info[2].replace(';', '%1C'));
+				}
+				checked++;
+			}
+		}
+		if(checked < 1){
+			alert("You haven't selected anything");
+			return false;
+		}
+		if(opt.value=='delete'){
+			var msg	= "Are you sure you want to delete\n";
+			if(checked==1) { msg += "this record?"; }
+			else	{ msg += "these "+checked+" records?"; }
+			return confirm(msg);
+		}
+		if(whattags.length){	// 5-23-2016 (RM 8411)
+			var tlmTags     = {
+				'client_ip' : utag_data['client_ip'],
+				'conversion_action' : 'Save Results',
+				'coverage_area' : covtags.join(';'),
+				'heading' : hdtags.join(';'),
+				'hierarchy_1' : 'TNET',
+				'hierarchy_2' : 'MYTHOMAS',
+				'hierarchy_3' : 'SAVE_RESULTS',
+				'internal_search_term' : whattags.join(';'),
+				'page_content_group' : 'My Thomas',
+				'servercallhost' : utag_data['servercallhost'],
+				'click_origin' : 'MyThomas Recent Searches'
+			}
+
+			utag.link(tlmTags);
+		}
+
+	}
+	return true;
+}
+
+function validMtShortListMod(mtform){
+	with(mtform){
+		var checked = 0;
+		for (var i = 0; i < elements.length; i++) {
+			if(elements[i].name.substring(0,4)=="mtid" && elements[i].checked){
+				checked++;
+			}
+		}
+		if(checked < 1){
+			alert("You haven't selected any suppliers");
+			return false;
+		}
+		if(opt.value=='delete'){
+			var msg = "Are you sure you want to delete ";
+			if(checked==1) { msg += "this Supplier "; }
+			else    { msg += "these "+checked+" Suppliers "; }
+			msg += "?\n\nNote that this will only remove the Supplier(s) from THIS Shortlist.";
+			return confirm(msg);
+		}
+	}
+	return true;
+}
+
+function validMtSuppList(mtform){
+	with(mtform){
+		var checked = 0;
+		for (var i = 0; i < elements.length; i++) {
+			if(elements[i].name.substring(0,4)=="mtid" && elements[i].checked){ 
+				checked++;
+			}
+		}
+		if(checked < 1){
+			alert("You haven't selected any suppliers");
+			return false;
+		}
+		if(opt.value=='delete'){
+			var msg	= "Are you sure you want to delete ";
+			if(checked==1) { msg += "this Supplier "; }
+			else	{ msg += "these "+checked+" Suppliers "; }
+			msg += "from your Saved Supplier list?\n\nNote that this will also remove the Supplier(s) from any Shortlists they are on.";
+			return confirm(msg);
+		}
+	}
+	return true;
+}
+
+function validNewsletters(formname){
+	with(formname){
+		var pnacats	= 0;
+		if(typeof xtsubs !== 'undefined' && xtsubs.value=='1'){
+			if($('#xtpna').is(':checked')){
+				for(var i = 0; i < elements.length; i++){
+					if(elements[i].type=="checkbox" && elements[i].name.substring(0,6)=="pnacat" && elements[i].checked){
+						pnacats++;
+						break;
+					}
+				}
+				if(pnacats < 1){
+					alert("You must select at least one category for the \"Product News Alerts\" newsletter\n\n");
+					return false;
+				}
+			}
+		}
+	}
+}
+
+function validZipSearch(){/*RM 9512*/
+	var ErrMsg	= "";
+	var ErrField	= "";
+	var postal	= $.trim($('#postal').prop('value'));
+	var validzip	= new ValidateZip(postal);
+	$('#postal').val(validzip.formatDisplay());
+	if(postal=='' || postal==$('#postal').attr('placeholder') || (!validzip.validUSA5() && !validzip.validCAN6())){
+		alert('\"Zip/Postal Code\" appears to be invalid:\n\nUS codes should contain 5 digits\nCanadian codes should contain 6 characters');
+		$('#postal').focus();
+		return false;
+	}
+}
+
+function viewContent(url, cid, origin, params, self, reload){
+	var paramobj	= parseQueryString(params);
+
+	paramobj['framesrc']	= escape(url);
+	if(cid > '' && (isEmpty(paramobj['cid']) || paramobj['cid']!=cid))	{ paramobj['cid'] = cid; } 
+
+
+	//if(document.location.protocol == 'https:'){	// 8-11-2015 (RM 7268 / 7574)
+	if(document.location.protocol == 'https:' && url.indexOf('thomasnet.com') < 0 && url.indexOf('https:') < 0){	// 8-11-2015 (RM 7268 / 7574 / TW-50)
+		if(isEmpty(paramobj['hierarchy_1'])){
+			paramobj['hierarchy_1'] = 'TNET';
+			paramobj['hierarchy_2'] = 'COMPANYINFO';
+			paramobj['hierarchy_3'] = 'PDFCATALOG';
+			paramobj['hierarchy_4'] = 'HOME';
+		}
+		if(isEmpty(paramobj['conversion_action']))	{ paramobj['conversion_action'] = 'Link to Website'; }
+		if(isEmpty(paramobj['page_content_group'])){ paramobj['page_content_group'] = 'PDF Links'; }
+		if(origin > '')	{ paramobj['WTZO'] = origin; }
+		urlParams	= qsFromObj(paramobj);
+
+		if(useTlm==1){
+			setTlmUtagLink(urlParams);
+		}
+		if(self  > ''){
+			location.href	= url;
+		} else {
+			newwin=window.open(url,'tnetview');
+			if(!newwin){
+				//alert('Your browser settings are preventing us from displaying the file');
+				location.href	= url;
+				return false;
+			}
+			if (window.focus) {newwin.focus()}
+			return false;
+		}
+	}
+
+	if(origin > '')	{ paramobj['WTZO'] = origin; delete paramobj['click_origin'];}
+	urlParams	= qsFromObj(paramobj);
+	var theURL	= window.location.protocol + '//' + window.location.host + '/viewcontent.html?' + urlParams;
+
+	if(self  > ''){
+		location.href	= theURL;
+		return false;
+	} else {
+		var features	= "height=600,width="+(screenW-50)+",RESIZABLE=1,TOOLBAR=0,MENUBAR=0,LOCATION=0,STATUS=0,DIRECTORIES=0,SCROLLBARS=0";
+		var newwin = window.open(theURL,'tnetview',features);
+		if(!newwin){
+			//alert('Your browser settings are preventing us from displaying the file');
+			location.href   = theURL;
+			return false;
+		}
+		newwin.creator  = self;
+		if (window.focus) {newwin.focus()}
+		newwin.focus();
+		if(reload) { window.location.reload(true); }
+		return true;
+	}
+}
+
+function viewProdSearchPDF(url, cid, what, title, wtzo){
+	if(document.location.protocol == 'https:'){	// 8-11-2015 (RM 7268)
+		newwin=window.open(url,'tnetview');
+		if (window.focus) {newwin.focus()}
+		return false;
+	}
+	var theURL	= "/viewpdf.html?what="+escape(what)+"&title="+escape(title)+"&alink="+escape(url);
+	if(cid > '')  { theURL += "&cid="+cid; }
+	if(wtzo > '')  { theURL += "&WTZO="+escape(wtzo); }
+	theURL += "&framesrc="+escape(url);
+	var features    = "height=600,width="+(screenW-50)+",RESIZABLE=1,TOOLBAR=0,MENUBAR=0,LOCATION=0,STATUS=0,DIRECTORIES=0,SCROLLBARS=0";
+	newwin=window.open(theURL,'tnetview',features);
+	newwin.creator  = self;
+	if (window.focus) {newwin.focus()}
+	return false;
+}
+
+function newWin(url){
+    // This function is used simply to open links in a new window.
+    // By using Javascript to open the window, you can also use javacript to close the new window.
+
+	var destination = window.open(url);
+    destination.creator  = self;
+    
+	if (window.focus) {
+        destination.focus();
+    }
+    
+	return false;
+}
+
+if(typeof(useCluetip) == 'undefined' || useCluetip === null){
+	var useCluetip	= '';
+}
+
+$(window).load(function() { 
+    equalheight('.match-height');
+    newequalheight('.match-height2');
+});
+$(window).resize(function(){
+    equalheight('.match-height');
+    newequalheight('.match-height2');
+});
+
+$(document).ready(function(){
+
+	// New job function/discipline select boxes
+	var jobFunction = document.getElementById('job_function');
+	if(jobFunction){
+		var jobDiscipline = document.getElementById('job_discipline');
+		jobFunction.addEventListener('change',
+			function(e){
+				var jobFunctionVal	= jobFunction.value;
+				jobDiscipline.innerHTML = '<option value="">- Select -</option>';
+				jobDiscipline.setAttribute('disabled', true);
+				if(typeof jobDisciplines[jobFunctionVal] !== 'undefined'){
+					for (var val in jobDisciplines[jobFunctionVal]) {
+						var opt = document.createElement('option');
+						opt.value = val;
+						opt.innerText = jobDisciplines[jobFunctionVal][val];
+						jobDiscipline.appendChild(opt);
+					}
+					jobDiscipline.removeAttribute('disabled');
+				}
+				e.preventDefault();
+				console.log(jobFunction.value);
+			}
+		);
+	}
+
+  if (window.stickyNav === undefined) { window.stickyNav = 0; }
+
+	$('#newslettersignup').submit(function(e){
+		e.preventDefault();
+		var f	= $(this);
+		var v	= f.find('input[name=email]');
+		v.val($.trim(v.val()));
+		if(!isEmail(v.val())){
+			alert('Please enter a valid email address');
+			v.focus();
+			return false;
+		} else {
+			liteReg.run({
+				email : v.val(),
+				origin : f.find('input[name=origin]').val(),
+				extralite : '1'
+			}).done(function(rslt) {
+				if ($.cookie('tinid').length == 0) {
+					alert('An error occurred during the submit process.');
+				} else {
+					f.find('input[name=tinid]').val($.cookie('tinid'));
+					$.ajax({
+						url: '/scripts/subscribe-industrial-daily.php',
+						method: 'post',
+						dataType: 'jsonp',
+						data: f.serialize()
+					}).done(function (data) {
+						var regstat	= data.response;
+						if(regstat!='success'){
+							alert('The following error occurred:\n' + regstat);
+						} else {
+							alert('Thank you for subscribing');
+						}
+					}).fail(function(jqXHR, textStatus, errorThrown) {
+						alert(JSON.stringify(jqXHR.responseText, null, 4));
+					});
+				}
+			}).fail(function(rslt) {
+				console.log('liteReg failed');
+				if (rslt.err.type == 'f') {
+					alert('The following information is missing or incomplete:\n' + rslt.err.msg);
+				} else { // For types 'i' and 'g'
+					alert('The following error occurred:\n' + rslt.err.msg);
+				}
+			});
+		}
+	});
+
+	/** special handling for incoming anchor links when stickyNav is in use - originated while working on RM 9623 **/
+
+	if($(location.href.split("#")[1]) && stickyNav > 0) {
+		var target = $('#'+location.href.split("#")[1]);
+		if (target.length) {
+			$('#tnet_searchwrap-sticky-wrapper').addClass('is-sticky');
+			$('#tnet_searchbar').addClass('active');
+			$('#copro_header-sticky-wrapper').addClass('is-sticky');
+
+			var $el = $('#copro_header').length ? $('#copro_header') : $('#tnet_navwrap');
+			var navheight = $el.position().top + $el.offset().top + $el.outerHeight(true) + 18;
+
+			$('html,body').animate({scrollTop: target.offset().top - navheight });
+		}
+	}
+
+	$('a[data-event_type="savesupplier"]').click(function(e){
+		e.preventDefault();
+		var d	= $(this).data();
+		delete d.event_type;
+		mtSaveSupplier(d['company_id'], 'results17', $.param(d), $(this).parent().parent());
+	});
+
+	$('a[data-event_type="shortlistsupplier"]').click(function(e){
+		e.preventDefault();
+		var d	= $(this).data();
+		delete d.event_type;
+		mtShortlistSupplier(d['company_id'], 'results17', $.param(d), $(this).parent().parent());
+	});
+	
+
+	$('.card.interim.tax.x h1').click(function(e){
+		$(this).parent().toggleClass('closed');
+		var pm = $(this).parent().hasClass('closed') ? '+' : '&ndash;';
+		$(this).find('.pm').html(pm);
+	});
+
+	$('.qualbtn').click(function(e){
+		var btnpos	= $(this).position();
+		e.preventDefault();
+		$(this).toggleClass('x');
+		$('.tnet_results_left').css('top', btnpos.top+18);
+		$('.tnet_results_left').toggle('slide');
+	});
+
+	$('.refinebtn').click(function(e){
+		var btnpos	= $(this).position();
+		e.preventDefault();
+		$(this).toggleClass('x');
+		$('#tnet_search_left').css('top', btnpos.top+24);
+		$('#tnet_search_left').toggle('slide');
+	});
+
+	$('a[data-ad_click="URMYSO"]').click(function(e){
+		e.preventDefault();
+		userLogOut();
+	});
+
+	$("button[name = 'compare']").click(function(){
+		compareSuppliers(btnParams);
+	});
+	$("button[name = 'psrfi']").click(function(){
+		rfi_reqInfoSubmit(btnParams, 0);
+	});
+	$("button[name = 'rfi']").click(function(){
+		rfi_Multi(btnParams);
+	});
+
+	$("a[href*=#top]").click(function(e) {
+		// RM 9597
+		$('#copro_header-sticky-wrapper').removeClass('is-sticky');
+	});
+
+	$("a.anchor").click(function(e){
+		e.preventDefault();
+		var hrefid	= $(this).attr('href');
+		var navheight	= $('#tnet_navwrap').height()+$('#copro_header').height();
+		$('html, body').animate({ scrollTop: $(hrefid).offset().top-navheight }, 'slow');
+	});
+
+	$('.anchornav').css('top', (0 - ($('#tnet_navwrap').height()+18)) + "px");
+
+	
+	$('.page_anchors .link').click(function(e){
+		$(this).siblings().removeClass('active');
+		$(this).addClass('active');
+	});
+
+	$('.pagination .inactive a').click(function(e){
+		return false;
+	});
+
+
+	if(useCluetip){
+		$('.ctDivLink').cluetip({
+			activation: 'click',
+			attribute: 'href',
+			dropShadow: false,
+			local:true, 
+			width: 525,
+			showTitle: false,
+			cluetipClass: 'jtip',
+			topOffset: 30,
+			sticky: true,
+			closePosition: 'title',
+			arrows: true
+		});
+
+		$('.ctDivClose').click(function(){
+			$(document).trigger('hideCluetip');
+		});
+	}
+
+	$('.cats_comenu .sub, #copro_menu .sub').click(function(e){
+		if($(this).hasClass('opened')){
+			$(this).children('.submenu').slideUp();
+			$(this).removeClass('opened');
+		} else {
+			$('.cats_comenu .submenu, #copro_menu .submenu').hide();
+			$('.cats_comenu li, #copro_menu li').removeClass('opened');
+			$(this).addClass('opened');
+			$(this).children('.submenu').slideDown();
+		}
+	});
+
+	catalogImages();
+
+	compRfiInit();
+
+	$('#copro_contact form').submit(function(){
+		var sb  = trim($('#rfisubject').val());
+		if(sb=='' || sb==$('#rfisubject').prop('title')){
+			alert("Please enter a subject for your request");
+			$('#rfisubject').val('').focus();
+			return false;
+		}
+	});
+
+	$('#cphnsbtn').click(function(){
+		$('#tnet_searchbar').slideDown('slow', function() {
+			$('#cphnsbtn').fadeOut();
+			if(stickyNav){
+				$('#tnet_navwrap').unstick();
+				$('#tnet_searchwrap').sticky({topSpacing:0});
+			}
+		});
+	});
+	$('#tnet_searchbar_close').click(function(){
+		$('#tnet_searchbar').slideUp('slow', function() {
+			$('#cphnsbtn').fadeIn();
+			if(stickyNav){
+				$('#tnet_searchwrap').unstick();
+				$('#tnet_navwrap').sticky({topSpacing:0});
+				$('#tnet_searchbar').removeClass('active');
+				$('#tnet_prop_logo').show();
+			}
+		});
+	});
+
+	initDropDownFilters();
+
+	var fltrb = $('.fltrbottom').height();
+	if(fltrb > 0 && screenW >= 1100){
+		fltrb += 60;
+		$('.fltrtop').css('padding-bottom',fltrb);
+	}
+
+	$('.glossmenu li, .keyword_tile').click(function(e) {
+		window.top.location.href = $(this).find('a').prop('href');
+	});
+
+	$('.id_signup form').submit(function(e){
+		e.preventDefault();
+		var f	= $(this);
+		var s = f.find('input[type=submit]');
+		var v	= f.find('input[name=email]');
+		var m	= f.find('.form-error');
+		var c	= f.closest('.content');
+		var d	= f.closest('.id_signup');
+
+		s.val('Processing...');
+		v.val($.trim(v.val()));
+		//var i = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+		//if (!i.test(v.val())){
+		if(!isEmail(v.val())){
+			$(this).addClass('has-error');
+			m.show().html('Please enter a valid email address');
+			s.val('Subscribe');
+			return false;
+		} else {
+			$(this).removeClass('has-error');
+			m.hide();
+			liteReg.run({
+				email : v.val(),
+				origin : f.find('input[name=origin]').val(),
+				extralite : '1'
+			}).done(function(rslt) {
+				if ($.cookie('tinid').length == 0) {
+					c.addClass('error').html('An error occurred during the submit process.');
+				} else {
+					f.find('input[name=tinid]').val($.cookie('tinid'));
+
+					$.ajax({
+						url: '/mythomas/scripts/daily-subscribe.php',
+						method: 'post',
+						dataType: 'jsonp',
+						data: f.serialize()
+					}).done(function (data) {
+						var regstat	= data.response;
+						if(regstat!='success'){
+							c.addClass('error').html('The following error occurred:<br>' + regstat);
+						} else {
+							c.html('Thank you for subscribing to Thomas Industry Update');
+						}
+						$('.id_signup').not(d).slideUp();
+					}).fail(function(jqXHR, textStatus, errorThrown) {
+						//alert(JSON.stringify(jqXHR.responseText, null, 4));
+						//c.addClass('error').html('We\'re sorry. There was a problem processing your request.');
+						c.addClass('error').html(jqXHR.responseText+'<br><br>'+textStatus);
+					});
+				}
+			}).fail(function(rslt) {
+				console.log('liteReg failed');
+				if (rslt.err.type == 'f') {
+					f.addClass('has-error');
+					m.show().html('The following information is missing or incomplete:<br>' + rslt.err.msg);
+					s.val('Subscribe');
+				} else { // For types 'i' and 'g'
+					c.addClass('error').html('The following error occurred:<br>' + rslt.err.msg);
+				}
+			});
+		}
+	});
+
+	$('.browsebox h2').click(function(e) {
+		$(this).parent().toggleClass('closed');
+		$(this).next('.bbcontent').slideToggle('slow');
+	});
+
+	$('.keyword_tile .title span').each(function(){
+		var w	= $(this).parent().width();
+		$(this).width(w);
+	});
+
+	$(".imgrollover").hover(function(){
+		$(this).attr("src", function(index, attr){return attr.replace("_off", "_on");});
+	}, function(){
+		$(this).attr("src", function(index, attr){return attr.replace("_on", "_off");});
+	});
+
+	$(".pn").hover(function(){
+		$(this).find('img').attr("src", function(index, attr){return attr.replace("_off", "_on");});
+	}, function(){
+		$(this).find('img').attr("src", function(index, attr){return attr.replace("_on", "_off");});
+	});
+
+	$(".interim.prod tr:odd,.interim.comp tr:odd,.interim.brand tr:odd,.interim.unspsc tr:odd").css("background-color", "#f5f5f5");
+
+	$("#kc_deftitle a").click(function(e){
+		e.preventDefault();
+		$('html, body').animate({ scrollTop: $('#kc_results').offset().top-60 }, 'slow');
+	});
+	
+	if (window.cb2017 !== undefined) { //RM9563
+		$(".lbahavid").colorbox({innerWidth:502, innerHeight:367, iframe:true});
+	} else {
+		$(".lbahavid").colorbox({width:552, height:421, iframe:true});
+	}
+	if (window.cb2017 !== undefined) { //RM9563
+		$(".lbcertinfo").colorbox({innerWidth:525, innerHeight:390, iframe:true});
+	} else {
+		$(".lbcertinfo").colorbox({width:590, height:400, iframe:true});
+	}
+	if (window.cb2017 !== undefined) { //RM9563
+	    $(".lbcertstub").colorbox({innerWidth:886, innerHeight:520, iframe:true});
+	} else {
+	    $(".lbcertstub").colorbox({width:936, height:600, iframe:true});
+	}
+	$(".lbchallenge").colorbox({width:550, height:550, iframe:true});
+	$(".lbcontact").colorbox({width:400, height:650, iframe:true});
+	$(".lbflex").colorbox({onComplete: function() { $.colorbox.resize(); }});
+	$(".lbcofeedbk").colorbox({innerWidth:400, innerHeight:507, iframe:true}); //RM9563a
+
+	// 1/25/2018 (rw-active)
+	$('.lbcofeedbk').click(function(){$('body').addClass('rw-active');});
+
+	if (window.cb2017 !== undefined) { //RM9563
+		$(".lblarge").colorbox({innerWidth:750, innerHeight:470, iframe:true});
+	} else {
+		$(".lblarge").colorbox({width:800, height:550, iframe:true});
+	}
+	$(".lblogin").colorbox({width:270, height:275, iframe:true});
+	if (window.cb2017 !== undefined) { //RM9563
+		$(".lbmedium").colorbox({innerWidth:500, innerHeight:245, iframe:true});
+	} else {
+		$(".lbmedium").colorbox({width:550, height:325, iframe:true});
+	}
+	$(".lbpreview").colorbox({width:450, height:550, iframe:true});
+	$(".lbsmall").colorbox({width:425, height:250, iframe:true});
+	$(".lbsuppliers").colorbox({width:800, height:550, iframe:true});
+	$(".lbxlarge").colorbox({width:950, height:650, iframe:true});
+	//if (location.hostname == 'tnet.thomasnet.com') { //RM9466
+	if (window.cb2017 !== undefined) { //RM9563
+	   $(".dnbcartpopup").colorbox({innerWidth:600, innerHeight:241, iframe:true}); //RM7639
+	} else {
+	   $(".dnbcartpopup").colorbox({width:650, height:340, iframe:true}); //RM7639
+	}
+	//} else {
+	//   $(".dnbcartpopup").colorbox({width:665, height:340, iframe:true}); //RM7639
+	//}
+
+	$('a.linkimg').hover(function(){
+		var id	= 'img'+$(this).prop('id');
+		if($('#'+id).length){
+			var curimg	= $('#'+id).attr('src');
+			var newimg	= curimg.replace('_off','_on');
+			if(newimg==curimg)	{ newimg = curimg.replace('_on','_off'); }
+			$('#'+id).attr('src', newimg);
+		}
+	});
+
+	$('.mtListOpt').click(function(){
+		var value	= $(this).prop('name');
+		var maxSelect = 25;
+		if (typeof rfiMaxSelections == 'function') { //RMCaterpillar //RM6917
+			maxSelect = rfiMaxSelections();
+		}
+
+		// RM7050
+		// JQuery data may be attached to the clicked image, which dictates the forms to be searched for supplier ids. 
+		if ($(this).data('forms') === undefined) {
+			var frms = $(this).closest('form');
+		} else {
+			var frms = $($(this).data('forms'));
+		}
+		// Original unique() method doesn't work here - no idea why, but it isn't reqired for current use.
+		var cids = frms.find("input[name='mtid[]']:checked").map(function() { var strs = this.value.split("-"); return strs[0]; }).get();
+		cids = $.unique(cids);
+
+
+		if(value=='send_rfi' || value=='add_to_shortlist'){
+			if(cids.length < 1) { alert("You have not selected any companies yet."); return false; }
+			if(value=='send_rfi' && cids.length > maxSelect) {
+				alert("You have selected "+cids.length+" Suppliers.\nYou may not Request a Quote from more than " + maxSelect + " suppliers at one time.");
+				return false;
+			} else if(value=='send_rfi') {
+			    if ($(this).data('rfiqs') === undefined) { var qs = ''; } //RM9792
+			    else { var qs = $(this).data('rfiqs'); } //RM9792
+			    if (qs.length) { qs = '&' + qs; } //RM9792
+				//var url = ajxRoot + "/rfi/rfi_main.html?WTZO=MyThomas" + "&cids=" + cids.join(','); //RM9792 (commented)
+				var url = ajxRoot + "/rfi/rfi_main.html?WTZO=MyThomas" + "&cids=" + cids.join(',') + qs; //RM9792
+				//if (window.isRM9792 !== undefined) { //RM9792
+                location.href = url; //RM9792
+                //} else {
+                //    window.open(url, 'rfi').focus();
+                //}
+			} else {
+				var url = "add_to_shortlist.html?WTZO=MyThomas" + "&cids=" + cids.join(',') +"&origin="+escape(location.pathname+location.search);
+				$.colorbox({title:'Add Suppliers to Shortlist', href:url, scrolling:false, onComplete: function() { $.colorbox.resize(); }});
+			}
+			return false;
+		} else {
+			if(location.href.indexOf("/mythomas/recent_suppliers.html") > 0 && value=='save'){	// 5-23-2016 (RM 8411)
+				var tlmTags = {
+					'client_ip' : utag_data['client_ip'],
+					'conversion_action' : 'Save Supplier',
+					'company_id' : cids.join(';'),
+					'hierarchy_1' : 'TNET',
+					'hierarchy_2' : 'MYTHOMAS',
+					'hierarchy_3' : 'SAVE_SUPPLIER',
+					'page_content_group' : 'My Thomas',
+					'servercallhost' : utag_data['servercallhost'],
+					'click_origin' : 'MyThomas Recent Suppliers'
+				}
+
+				utag.link(tlmTags);
+			}
+			$(this).closest('form').find('input[name=opt]').val(value);
+			$(this).closest('form').submit();
+		}
+	});
+
+	$('.addlprods .seeall.x').click(function(event){
+		event.preventDefault();
+		$(this).hide();
+		$('.addlprods li').removeClass('hide');
+	});
+
+	$('a[data-pcbcat]').click(function(){
+		var d	= $(this).data();
+		//alert(d['pcbcat']);
+		document.cookie = "pcbcat=" +escape(d['pcbcat']) + '; domain=.thomasnet.com' + '; path=/';
+	});
+
+	$('a[data-pcbcatpath]').click(function(){
+		var d	= $(this).data();
+		//alert(d['pcbcatpath']);
+		document.cookie = "pcbcatpath=" +escape(d['pcbcatpath']) + '; domain=.thomasnet.com' + '; path=/';
+	});
+
+	$("table.psgrid td.data div.wrapper div[class^=psimg]").hover(function () {
+		if($('#more'+this.id).length!=0){ $('#more'+this.id).show(); }
+	}, function () {
+		if($('#more'+this.id).length!=0){ $('#more'+this.id).hide(); }
+	});
+
+	$('.psthumbs img').click(function(e) {
+		if(!$(this).hasClass('psactivethumb')){
+			$('.psthumbs img').removeClass('psactivethumb');
+			$(this).addClass('psactivethumb');
+		}
+		$('#psitemimg').attr('src', $(this).attr('src').replace('/120/','/650/'));
+		$('#psimgtitle').html($(this).prop('alt'));
+	});
+
+	$('.pword.hasdefault').on('focus', function () {
+		$(this).prop('type', 'password');	// RM8977 (Added) G.S. 2016-10-25
+	}).on('blur', function () {	// 9-26-2017 JT
+		var val	= $(this).prop('value');
+		if(!val || val===$(this).prop('title')){
+			$(this).prop('type', 'text');
+		}
+	});
+
+	$('.psmsg').click(function(){
+		return confirm("We are taking you to our Product Sourcing application so you can view this company's products, search their catalog, filter products by specification, etc.");
+	});
+
+	$('#resultcontainer a, .psrsltlist .supplier a').click(function(){
+		if(typeof cphvals !== 'undefined'){
+			$.cookie('cphnav', cphvals, { path: '/', domain: '.thomasnet.com' });
+		}
+	});
+
+	$(".resultlist, table.rsltlist tr").hover(function(){$(this).toggleClass('hlrslt')});
+
+	var r = $('#rsltheader').height();
+	if(r > 0){
+		r -= 18;
+		$('.tnet_results_right').css('padding-top', r);
+	}
+
+
+	$(document).on("click","a.show-more-list",function(e) {
+		e.preventDefault();
+		var listId	= $(this).prop('id').replace("a-", "li-");
+
+		var hidden_list = $('#'+listId+' li.hide');
+
+		var lnkTxt = $(this).html().substr(5);
+
+		if (hidden_list.is(':hidden')) {
+			$(this).html("Less "+lnkTxt);
+			hidden_list.slideDown();
+		} else {
+			$(this).html("More "+lnkTxt);
+			hidden_list.slideUp();
+		}
+	});
+
+	$(document).on("click","a.show-more-txt",function(e) {
+		e.preventDefault();
+		var txtId  = $(this).prop('id').replace("a_", "txt_");
+		var hidden_txt = $('#'+txtId);
+
+		if ($(hidden_txt).hasClass('hide')) {
+			$(this).html(" less");
+			hidden_txt.show('slow');
+			hidden_txt.removeClass('hide');
+		} else {
+			$(this).html("... more");
+			hidden_txt.hide('slow');
+			hidden_txt.addClass('hide');
+		}
+	});
+    
+    if (window.cb2017 !== undefined) { //RM9563
+       $(".sitefeedbacknew").colorbox({ href:'/cbfeedback.html', innerWidth:400, innerHeight:362, iframe:true}); //RM9563a
+	   $(".sitefeedback").colorbox({title:'Tell Us What You Think?', href:'/cbfeedback.html', innerWidth:343, innerHeight:265, iframe:true});
+    } else {
+       $(".sitefeedback").colorbox({title:'Tell Us What You Think?', href:'/cbfeedback.html', width:393, height:345, iframe:true});
+    }
+	$('#tnet_search_left .fltrsubgrp h5').click(function(e){
+		if ($(this).css('background-image') != 'none') {
+			$(this).parent().toggleClass('closed');
+		}
+	});
+
+	$('.tnm-mobile, .tnm-desktop').click(function(event){
+		event.preventDefault();
+		var deviceval = $(this).hasClass('tnm-mobile') ? 'mobile' : 'desktop';
+		$.cookie('tnet-device', deviceval, { path: '/', domain: '.thomasnet.com' });
+		location.href   = document.URL.replace(/#.*$/, "");
+	});
+
+	$('.linkset .expand > a').click(function(e){
+		e.preventDefault();
+		var parentlist	= $(this).closest('li');
+		var childlist	= $(parentlist).find('ul');
+		$(parentlist).toggleClass('collapse');
+		$(childlist).slideToggle();
+	});
+
+	$('.vertgroup .toggle').click(function(){
+		var vertsub	= $(this).parent().find('.browsesub');
+		var pm	= $(vertsub).is(':visible') ? '[+]' : '[&#8211;]';
+		$(vertsub).toggle();
+		$(this).html(pm);
+	});
+
+	$('.view-phone').click(function(){
+		$(this).html($(this).prop('id').substring(5));
+	});
+	$('.view-phone-btn').click(function(){
+		$(this).parent().find('.bubble').fadeToggle();
+	});
+	$('html').click(function() {
+		$('.bubble').fadeOut();
+	});
+	$('.view-phone-dialog').click(function(e){
+		e.stopPropagation();
+	});	
+
+	$('.xtoggle').click(function(e){
+		e.preventDefault();
+		$(this).next('.xcontent').slideToggle('slow', function(){
+			$(this).closest('.expandable').toggleClass('closed');
+		});
+	});
+
+	$('.xttoggle').click(function(){
+		var appid	= $(this).prop('id').replace("xt", "");
+		if($(this).prop('checked')){
+			$('#xtsubs-'+appid).slideDown();
+		} else {
+			$('#xtsubs-'+appid).slideUp();
+		}
+	});
+
+	$('.xtopt').click(function(){
+		var strs = $(this).prop('value').split('|');
+		var appid= strs[0];
+		if($(this).prop('checked')){
+			$('#xt'+appid).prop('checked',true);
+		}
+	});
+});
+
+
+
+var irtags = {
+	'act' : 'company_refinement',
+	'ad_class' : 'ad_class',
+	'alink' : 'advertiser_link',
+	'category' : 'news_category',
+	'categorylist' : 'categorylist',
+	'ccpid' : 'ccp_company_id',
+	'cert' : 'refinement_certificate',
+	'channel' : 'channel',
+	'cid' : 'company_id',
+	'cidresultpos' : 'cid_results_position',
+	'cov' : 'coverage_area',
+	'etall' : 'et_all',
+	'etbuy' : 'et_buy',
+	'etother' : 'et_other',
+	'etsell' : 'et_sell',
+	'etunclass' : 'et_unclassified',
+	'heading' : 'heading',
+	'k' : 'search_within_results',
+	'loc' : 'located_in_cov',
+	'location' : 'search_city_state',
+	'mctoken' : 'matchcraft_token',
+	'navsec' : 'navigation_refinement',
+	'own' : 'owner_refinement',
+	'pdtl' : 'search_product_detail_refinement',
+	'pg' : 'page_number',
+	'PrdS_ITEM_ID' : 'item_id',
+	'PrdS_ITEM_Name' : 'item_name',
+	'PrdS_PROD_ID' : 'product_id',
+	'prid' : 'press_release_id',
+	'pslpid' : 'paid_search_landing_page_id',
+	'radius' : 'search_radius',
+	'searchpos' : 'search_position',
+	'searchType' : 'search_type',
+	'subcategory' : 'rfq_subcategory',
+	'TINCATL1' : 'hierarchy_1',
+	'TINCATL2' : 'hierarchy_2',
+	'TINCATL3' : 'hierarchy_3',
+	'TINCATL4' : 'hierarchy_4',
+	'TINCATL5' : 'hierarchy_5',
+	'TINCATL6' : 'hierarchy_6',
+	'TINCATL7' : 'hierarchy_7',
+	'tinid' : 'reg_user_id',
+	'TN_cat' : 'product_category',
+	'TN_family' : 'product_family',
+	'TN_panel' : 'panel_option',
+	'TN_prodid' : 'tn_product_id',
+	'TN_prodsearch' : 'search_product',
+	'TN_sc' : 'product_sourcing_indicator',
+	'tnet_pop' : 'pop_points',
+	'what' : 'internal_search_term',
+	'which' : 'which_search_type',
+	'WT_ac' : 'ad_click',
+	'WT.ac' : 'ad_click',
+	'WT_ad' : 'ad_impression',
+	'WT.ad' : 'ad_impression',
+	'WT_cc' : 'wt_cc',
+	'WT.cc' : 'wt_cc',
+	'WT_cd' : 'dom.color depth',
+	'WT.cd' : 'dom.color depth',
+	'WT_cg_n' : 'page_content_group',
+	'WT.cg_n' : 'page_content_group',
+	'WT_cg_s' : 'page_content_subgrouping',
+	'WT.cg_s' : 'page_content_subgrouping',
+	'WT_co' : 'cookies_enabled',
+	'WT.co' : 'cookies_enabled',
+	'WT_dcsqry' : 'dom.querystring',
+	'WT.dcsqry' : 'dom.querystring',
+	'WT_dcsref' : 'dom.referrer',
+	'WT.dcsref' : 'dom.referrer',
+	'WT_dcsuri' : 'dom.pathname',
+	'WT.dcsuri' : 'dom.pathname',
+	'WT_dcsvid' : 'visitor_id',
+	'WT.dcsvid' : 'visitor_id',
+	'WT_em' : 'encoding_type',
+	'WT.em' : 'encoding_type',
+	'WT_fi' : 'flash_installed',
+	'WT.fi' : 'flash_installed',
+	'WT_hdr.Accept' : 'http_header',
+	'WT.hdr.Accept' : 'http_header',
+	'WT_hp' : 'page_type',
+	'WT.hp' : 'page_type',
+	'WT_le' : 'language_encoding',
+	'WT.le' : 'language_encoding',
+	'WT_loc' : 'location_city_state',
+	'WT.loc' : 'location_city_state',
+	'WT_mc_n' : 'campaign_name',
+	'WT.mc_n' : 'campaign_name',
+	'WT_mc_t' : 'campaign_type',
+	'WT.mc_t' : 'campaign_type',
+	'WT_mle' : 'meta_language_encoding',
+	'WT.mle' : 'meta_language_encoding',
+	'WT_pn' : 'conversion_action',
+	'WT.pn' : 'conversion_action',
+	'WT_sem_engine' : 'sem_engine',
+	'WT.sem_engine' : 'sem_engine',
+	'WT_sem_keyword' : 'sem_keyword',
+	'WT.sem_keyword' : 'sem_keyword',
+	'WT_si_n' : 'scenario_name',
+	'WT.si_n' : 'scenario_name',
+	'WT_si_p' : 'scenario_step',
+	'WT.si_p' : 'scenario_step',
+	'WT_si_x' : 'scenario_order',
+	'WT.si_x' : 'scenario_order',
+	'WT_srch' : 'search_engine_type',
+	'WT.srch' : 'search_engine_type',
+	'WT_ti' : 'page_name',
+	'WT.ti' : 'page_name',
+	'WT_ul' : 'site_language',
+	'WT.ul' : 'site_language',
+	'WT_z_noadlist' : 'no_ad_list',
+	'WT.z_noadlist' : 'no_ad_list',
+	'WT_z_ORIGIN' : 'click_origin',
+	'WT.z_ORIGIN' : 'click_origin',
+	'WTZO' : 'click_origin',
+	'WT_z_sem_account' : 'sem_account',
+	'WT.z_sem_account' : 'sem_account',
+	'WT_z_testgroup' : 'test_group',
+	'WT.z_testgroup' : 'test_group',
+	'zip' : 'zip_code'
+}
+
+var parseQueryString = function ( queryString ) {
+	var params = {}, queries, temp, i, l;
+	//queryString	= decodeURIComponent(queryString);
+	//queryString	= queryString.replace(/&amp;/g, '&');
+
+	queries = queryString.split("&");
+
+	for ( i = 0, l = queries.length; i < l; i++ ) {
+		temp = queries[i].split('=');
+		var fldname	= temp.shift();
+		params[fldname] = temp.join('=');
+	}
+	return params;
+}
+
+var removeQsParam = function ( queryString, paramName ) {
+	var params = new Array(), newval, fld;
+
+	var paramobj	= parseQueryString(queryString);
+	for (var fld in paramobj) {
+		if (paramobj.hasOwnProperty(fld)) {
+			if(fld != paramName){
+				newval	= encodeURIComponent(paramobj[fld]);
+				//alert(fld+'='+newval);
+				params.push(fld+'='+newval);
+			}
+		}
+	}
+	return params.join('&');
+}

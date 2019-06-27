@@ -1,0 +1,522 @@
+var rwPage	= window.location.href;
+var rwUri	= window.location.pathname+window.location.search;
+var rwRef	= $.cookie("rwRef");
+var thruTags	= {};
+if(rwUri==rwRef)	{ rwRef=''; }
+
+var rwModal = (function(){
+	var 
+	method = {},
+	$overlay,
+	$modal,
+	$content;
+
+	method.onClose = $.noop; // RM9367
+
+	// Center the modal in the viewport
+	method.center = function () {
+		var top, left;
+
+		if(rwM=='cert') { $('html').addClass('modal'); }	// 3-17-2016 (RM 8051)
+		top = Math.max($(window).height() - $modal.outerHeight(), 0) / 2;
+		left = Math.max($(window).width() - $modal.outerWidth(), 0) / 2;
+		$modal.css({
+			top:top + $(window).scrollTop(), 
+			left:left + $(window).scrollLeft()
+		});
+	};
+
+	// Open the modal
+	method.open = function (settings) {
+		$content.empty().append(settings.content);
+
+		var cssSettings = {
+			width: settings.width || 'auto', 
+			height: settings.height || 'auto',
+		};
+
+		// only add max width if set by caller
+		// to better support mobile viewports
+		if (settings.maxWidth) {
+			cssSettings.maxWidth = settings.maxWidth;
+		}
+
+		$modal.css(cssSettings);
+
+		method.center();
+		$(window).bind('resize.modal', method.center);
+		$modal.show();
+		$overlay.show();
+	};
+
+	//method.close = function () {
+	method.close = function (closedByClick) { // RM9367 (Added closedByClick param)
+		$('html').removeClass('modal');	// 3-17-2016 (RM 8051)
+		$modal.hide();
+		$overlay.hide();
+		$content.empty();
+		$(window).unbind('resize.modal');
+		if (typeof method.onClose === "function") { //RM9367
+			if (closedByClick === undefined) { closedByClick = 0; }
+			method.onClose(closedByClick);
+		}
+	};
+
+	// Generate the HTML and add it to the document
+	$overlay = $('<div class="rwoverlay"></div>');
+	$modal = $('<div class="rwwrap"></div>');
+	$content = $('<div class="rwcontent"></div>');
+
+	$modal.hide();
+	$overlay.hide();
+	$modal.append($content);
+
+	$(document).ready(function(){
+		$('body').append($overlay, $modal);
+	});
+	return method;
+}());
+
+rwP = '', rwM = '', rwTarget = '';
+
+function rwSetTags(pagetype, pageaction, scenario_order){
+	/** RM 6200#31 **/
+	var rwPre	= "RegWall";
+	var rwSip	= pagetype+pageaction;
+	var rwTinid	= getCookie('tinid');
+
+	if (typeof scenario_order === 'undefined') { scenario_order=''; }
+	
+	if(rwM.substr(0, 4)=='cert')	{ rwPre = "Cert"+rwPre; }
+	else if(rwM=='page2' || rwM=='freeprofile' || rwM=='map')	{ rwPre = rwM+rwPre; }	// RM 8717 - RM 9469 (added map)
+	var rwSin	= rwPre;
+	rwSin += pagetype=='Forgot' ? 'LogIn' : pagetype;
+
+	//alert(pagetype+'\n'+pageaction+'\nscenario_name: '+rwSin+'\nscenario_step: '+rwSip);
+
+	var rwTags = ["scenario_name", rwSin, "scenario_step", rwSip];
+
+	if(scenario_order)	{ rwTags.push("scenario_order", scenario_order); }	// RM 9469
+
+	if(pageaction=='Submit' && pagetype!='Forgot') {
+		rwTags.push("signedin", "yes");
+		rwTags.push("reg_user_id", rwTinid);
+
+		if(rwTarget=='ext' && typeof rwP !== 'undefined'){	// RM 8592
+			var paramobj	= parseQueryString(rwP);
+			for (var i in paramobj) {
+				if (paramobj.hasOwnProperty(i)) {
+					newtag = i;
+					rwTags.push(newtag, decodeURIComponent(paramobj[i].replace(/\+/g, ' ')));
+				}
+			}
+			//alert(rwP+'\n\n'+JSON.stringify(rwTags, null, 2));
+		}
+	}
+
+
+	if(useTlm==1){
+		var tlmTags = {}, i, key, val;
+
+		for (i = 0; i < rwTags.length; i++) {
+			tag = rwTags[i].replace(/DCSext\./g, '');
+			newtag = irtags[tag] ? irtags[tag] : tag.toLowerCase();
+			i++;
+			tlmTags[newtag] = rwTags[i];
+		}
+
+		if(pageaction=='Form' && pagetype=='LogIn' && rwM=='certoverview'){
+			$.extend(tlmTags, utag_data);	/* RM 9429#34 */
+		}
+
+		tlmTags['client_ip']	= utag_data['client_ip'];
+		tlmTags['servercallhost']	= utag_data['servercallhost'];
+		
+		if(typeof utag_data!="undefined" && typeof utag_data.noview_flag!="undefined"){	// first time in, submit all page tags
+			delete utag_data.noview_flag;
+			$.extend(tlmTags, utag_data);
+		}
+		
+		// 6-27-2017 (RM 9469#16)
+		if(typeof tlmTags.ad_impression=="undefined"){
+			tlmTags.ad_impression	= [];
+		}
+		tlmTags.ad_impression.push('close');
+
+		utag.view(tlmTags);
+		//alert(JSON.stringify(tlmTags, null, 2));
+	}
+	//alert('useTlm: '+useTlm+'\nmode: '+rwM+'\n'+rwTags.join()+'\n'+JSON.stringify(tlmTags, null, 2));
+}
+
+
+//function rwOpen(rwMode, rwMsg, rwParams, rwPage, rwT){
+function rwOpen(rwMode, rwMsg, rwParams, rwPage, rwT, rwOnClose){ // RM9367 (Added rwOnClose)
+	if(!loggedin){
+		// 2/8/2018 (rw-active to hide rfi widget)
+		$('body').addClass('rw-active');
+		rwM = rwMode;
+		rwP = typeof rwParams !== 'undefined' ? rwParams : '';
+		rwPg = typeof rwPage !== 'undefined' ? rwPage : '';
+		rwTarget = typeof rwT !== 'undefined' ? rwT : '';
+		if (typeof rwOnClose === "function") { rwModal.onClose = rwOnClose; } // RM9367
+
+		rwUrl	= '/mythomas/scripts/regwall-login.php?rwMode='+rwMode+'&rwMsg='+escape(rwMsg);
+		rwSetTags('LogIn','Form');
+		$.get(rwUrl, function(data) {
+			rwModal.open({content: data});
+			rwInit();
+		});
+	}
+}
+
+function rwInit(){
+	$('.rwdecline a').unbind('click'); // RM9367
+	$('.rwdecline a').click(function(e){
+		e.preventDefault();
+
+		// 1/24/2018 (rw-active)
+		$('body').removeClass('rw-active');
+
+		// 6-26-2017 (RM 9469)
+		var tlmTags = {'ad_click': 'close', 'client_ip': utag_data.client_ip, 'servercallhost': utag_data.servercallhost};
+		utag.view(tlmTags);
+			
+
+		if ($(".rm9367").length == 0) { //RM9367
+			if(rwM=='RFI') { top.location.href='/'; } //8977
+		}
+		if(rwM=='cert' || rwM=='certsupp' || rwM=='cotype' || rwM=='zipcode' || rwM=='page2' || rwM=='freeprofile') {
+			if(rwRef > '') { top.location.href=rwRef; }
+			else { window.history.go(-1); }
+			return false;
+		}
+		//rwModal.close();
+		rwModal.close(1); // RM9367 (Only added the param 1)
+	});
+
+	$('#tnetpro-forgot').one("click", function(){
+		$.post('/mythomas/scripts/forgotpw.php', $("#rwPword").serialize(), function(data){
+			var error	= '';
+			var regstat	= data.response;
+			if(regstat=='Success'){
+				$('form').addClass('hide');
+				$('.forgot').addClass('hide');
+				$('#regmsg').html('We have located your ThomasNet account info. Please check your e-mail for a message from UserServices@ThomasNet.com which will contain instructions for logging in to ThomasNet.<br><br><a href="'+rwPage+'">Continue</a>').addClass('confirm').removeClass('hide');
+				rwSetTags('Forgot','Submit');
+			} else {
+				$('#regmsg').html('We were unable to process your request.').addClass('error').removeClass('hide');
+			}
+		},"jsonp");
+	});
+	
+	function swapOnMouseOver (img){ img.src=img.src.replace("_off", "_on");}
+	function swapOnMouseOut (img){img.src=img.src.replace("_on", "_off");}
+	$(".imgrollover").hover(function(){swapOnMouseOver(this)},function(){swapOnMouseOut(this)});
+
+	$('.xttoggle').click(function(){
+		var appid	= $(this).prop('id').replace("xt", "");
+		if($(this).prop('checked')){
+			$('#xtsubs-'+appid).slideDown();
+		} else {
+			$('#xtsubs-'+appid).slideUp();
+		}
+	});
+
+	$('.xtopt').click(function(){
+		var strs = $(this).prop('value').split('|');
+		var appid= strs[0];
+		if($(this).prop('checked')){
+			$('#xt'+appid).prop('checked',true);
+		}
+	});
+}
+
+function rwTrim(str) { 
+	return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+function rwIsValidPword(InString){
+	var hasnum	= 0;
+	if(InString.length < 6 || InString.length > 20)	{ return (false); }	// Password must be at least 6 and not longer than 20 chars
+
+	var pwRefString="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+	for (var Count=0; Count < InString.length; Count++)  {
+		TempChar= InString.substring (Count, Count+1);
+		if(pwRefString.indexOf(TempChar)==-1) { return (false); }
+		if(rwIsNumber(TempChar))	{ hasnum++; }
+	}
+	if(hasnum < 1)	{ return (false); }	// Password must contain a number
+	return (true);
+}
+
+function rwIsNumber(InString){
+	if(InString.length==0)
+		return (false);
+	var RefString="1234567890";
+	for (var Count=0; Count < InString.length; Count++)  {
+		TempChar= InString.substring (Count, Count+1);
+		if (RefString.indexOf (TempChar, 0)==-1)
+			return (false);
+		}
+	return (true);
+}
+
+function rwIsEmail(str) {
+	// 10-21-2015 (RM 7594)
+	str	= str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+	var pattern	= /.+@.+\..+/i;
+	return pattern.test(str);
+}
+
+function rwLogEmail(mtform){
+	with(mtform){
+		uname.value	= rwTrim(uname.value);
+		if(!uname.value || $('#uname').attr('placeholder')==uname.value){
+			uname.focus();
+			$('#regmsg').html('Email address is required').addClass('error').removeClass('hide');
+			return false;
+		}
+		$('#rwsubmit').prop('src', '//cdn.thomasnet.com/images/images/button-loading.gif');
+		$.ajax({
+			url: "/mythomas/scripts/tnetpro-emailstatus.php",
+			dataType: "jsonp",
+			data: { uname:uname.value },
+			success: function (results) {
+				estatus	= results.response;
+				$('#rwsubmit').prop('src', '//cdn.thomasnet.com/images/tnetpro/continue_off.png');
+				if(estatus=='newuser' || estatus=='lite'){
+					rwSetTags('SignUp','Form');
+					$('.rwwrap').addClass('scrolling');
+					$.get('/mythomas/scripts/regwall-register-short.php', { uname:uname.value, origin:'regwall-'+rwM } ).done(function(data) {
+						rwModal.open({content: data});
+						rwInit();
+					});
+				} else {
+					rwSetTags('LogIn','Password', '5');	// 6-26-2017 (RM 9469)
+					$.get("/mythomas/scripts/regwall-pword.php", { uname:uname.value } ).done(function( data ) {
+						$('.rwlogin h1').html('Sign in to continue');
+						$('#regmsg').addClass('hide').removeClass('error');
+						$('#rwcontent').html( data );
+						rwInit();
+					});
+				}
+			}
+		});
+	}
+}
+
+function rwLogPword(mtform){
+	with(mtform){
+		uname.value	= rwTrim(uname.value);
+		pword.value	= rwTrim(pword.value);
+		if(!pword.value || $('#pword').attr('placeholder')==pword.value){
+			pword.focus();
+			$('#regmsg').html('Password is required').addClass('error').removeClass('hide');
+			return false;
+		}
+		$('#rwsubmit').prop('src', '//cdn.thomasnet.com/images/images/button-loading.gif');
+		$.ajax({
+			url: "/mythomas/scripts/regwall-pwordstatus.php",
+			dataType: "jsonp",
+			data: { uname:uname.value, pword:pword.value },
+			success: function (results) {
+				estatus	= results.response;
+				if(estatus=='invalid'){
+					rwSetTags('LogIn','WrongPassword', '6');	// 6-26-2017 (RM 9469)
+					$('#rwsubmit').prop('src', '//cdn.thomasnet.com/images/tnetpro/continue_off.png');
+					$('#regmsg').html('The password that you entered is incorrect. Please try again or click "Forgot your password?" below.').addClass('error').removeClass('hide');
+					pword.value='';
+				} else {
+					document.querySelector('body').classList.add('rw-signin-success');	// TW-1341
+					if(rwM=='savesupp' && typeof rwP !== 'undefined'){
+						rwP += "&scenario_name=RegWallLogIn&scenario_step=LogInSubmit";
+						rwSaveSupp();
+					} else if(rwPg && rwTarget=='ext'){	// RM 8592
+						var tinid	= getCookie('tinid');
+						rwP += "&scenario_name=RegWallLogIn&scenario_step=LogInSubmit";
+						if(isPDF(rwPg) && isPdfSite()){
+							return viewContent(rwPg, '', '', rwP, '', '1');
+						} else {
+							rwP += "&signedin=yes&tinid="+tinid+"&client_ip="+utag_data.client_ip+"&servercallhost="+utag_data.servercallhost;
+							setTlmUtagLink(rwP);
+							window.location.href=rwPg;
+						}
+						rwModal.close();
+						return false;
+					} else {
+						rwSetTags('LogIn','Submit');
+					}
+
+					if(rwPg.substr(0, 4)=='http')	{ top.location.href=rwPg; }
+					else if(typeof rwGoto !== 'undefined') { top.location.href=rwGoto; }
+
+					rwModal.close();
+				}
+			}
+		});
+	}
+}
+
+function rwRegister(formname){
+	var errMsg	= new Array();
+	var errReqFld	= new Array();
+	var errLoginFld	= new Array();
+	var ErrFld;
+	$('#rwsubmit').prop('src', '//cdn.thomasnet.com/images/images/button-loading.gif');
+	with(formname){
+		var reqFields = new Array("fname", "lname", "company", "industry", "job_function", "country", "email", "email2", "pword", "pword2");
+		// reqFields.push('job_discipline');
+		if (typeof rwM !== 'undefined' && rwM == 'dnbecom') { //RM7639
+			reqFields = reqFields.concat(new Array("address","city","state","zip"));//"address_2","website","phone"
+		}
+
+		for(i=0; i < elements.length; i++){
+			elements[i].value = rwTrim(elements[i].value);
+			if($.inArray(elements[i].name, reqFields) >= 0 && elements[i].value==''){
+				if(!ErrFld)	{ ErrFld = elements[i]; }				
+				errReqFld.push($("label[for='" + elements[i].name + "']").text());
+			}
+		}
+
+		var error	= errReqFld.join('<br />');
+		if(error){
+			errMsg.push("<b>Missing Required Fields:</b></br>"+error);
+		}
+
+		if(email.value){
+			if(!rwIsEmail(email.value) && !userid.value){
+				errLoginFld.push("The email address you entered appears to be invalid");
+				if(!ErrFld)	{ ErrFld = email; }
+			} else if(email.value != email2.value){
+				errLoginFld.push("Email addresses do not match");
+				if(!ErrFld)	{ ErrFld = email; }
+			}
+		}
+		if(pword.value){
+			if(!rwIsValidPword(pword.value)){
+				if(!ErrFld)	{ ErrFld = pword; }
+				errLoginFld.push("Passwords may only contain alphanumeric characters, must contain a number, must be at least 6 characters long, and must be no longer than 20 characters");
+			} else if(pword.value != pword2.value){
+				errLoginFld.push("Passwords do not match");
+				if(!ErrFld)	{ ErrFld = pword; }
+			}
+		}
+		error	= errLoginFld.join('<br />');
+		if(error)	{ errMsg.push("<b>Invalid Login Credentials:</b><br />"+error); }
+		
+
+		if(!corptandc.checked){
+			errMsg.push("You must accept the terms and conditions before signing up");
+		}
+
+		if(errMsg.length > 0){
+			$('#regmsg').html(errMsg.join('<br /><br />')).addClass('error').removeClass('hide');
+			if(ErrFld)	{ ErrFld.focus(); }
+			$('html, body').animate({ scrollTop: 0 }, 'slow');
+			$('#rwsubmit').prop('src', '//cdn.thomasnet.com/images/tnetpro/create_free_account_off.png');
+			return false;
+		}
+	}
+
+
+	$.post('/mythomas/scripts/regwall-sso-update.php', $("#mtnewaccount").serialize(), function(data){ 
+		var error	= '';
+		var hideform	= 0;
+		var regstat	= data.response;
+		if(regstat=='Success'){
+			document.querySelector('body').classList.add('rw-signup-success');	// TW-1341
+			if(rwM=='savesupp' && typeof rwP !== 'undefined'){
+				rwSetTags('SignUp','Submit');
+				rwSaveSupp();
+			} else if(rwPg && rwTarget=='ext'){	// RM 8592
+				var tinid	= getCookie('tinid');
+				if(isPDF(rwPg) && isPdfSite()){
+					rwP += "&scenario_name=RegWallSignUp&scenario_step=SignUpSubmit";
+					return viewContent(rwPg, '', '', rwP, '', '1');
+					return false;
+				} else {
+					rwSetTags('SignUp','Submit');
+				}
+				window.location.href=rwPg;
+				rwModal.close();
+				return false;
+			} else {
+				rwSetTags('SignUp','Submit');
+			}
+			
+			if(rwPg.substr(0, 4)=='http')	{ top.location.href=rwPg; }
+			else if(typeof rwGoto !== 'undefined') { top.location.href=rwGoto; }
+			rwModal.close();
+
+		} else if(regstat=='Already registered'){
+			error	= "<b>Duplicate Registration</b><br />There is already an account associated with the email address you entered. Please click \"Sign In\" above or choose a different email address.";
+		} else if(regstat=='Error creating new record'){
+			error	= "<b>Error</b><br />We were unable to complete your request at this time. Please try again later.";
+		} else if(regstat=='Missing required fields'){
+			error	= "<b>Missing Required Fields:</b></br>Please complete the form below. All fields are required.";
+		} else {
+			error = regstat;
+		}
+
+		if(error){
+			$('#regmsg').html(error).addClass('error').removeClass('hide');
+			if(hideform)	{ $('#mtnewaccount').addClass("hide"); }
+			$('html, body').animate({ scrollTop: 50 }, 'slow');
+			$('#rwsubmit').prop('src', '//cdn.thomasnet.com/images/buttons/rw_create_account_on.png');
+		}
+	},"jsonp");
+	return false;
+}
+
+function rwSaveSupp(){
+	var paramobj	= parseQueryString(rwP);
+	var tinid	= getCookie('tinid');
+	//var wtp	= rwP;
+	var wtp	= paramobj['wtp'];
+
+	rwP	= removeQsParam(rwP, 'wtp') + '&' + decodeURIComponent(wtp);
+
+	$.ajax({
+		url: "/mythomas/scripts/save-copro.php",
+		dataType: "jsonp",
+		data: { cid: paramobj['cid'], tinid:tinid },
+		success: function (results) {
+			var response = results.response;
+			if(response=='Saved'){
+				rwP += "&signedin=yes&tinid="+tinid;
+				setTlmUtagLink(rwP);
+
+				/* sc=1 param indicates "supplier confirmation". It tells "add to shortlist" page whether or not the supplier(s)
+				passed in the cids param was/were just saved, requiring a "(company name) has been added" confirmation message. */
+				var url = "/mythomas/add_to_shortlist.html?cids=" + paramobj['cid'] +"&sc=1&wtp="+wtp+"&ofunc=savesupp";
+				if (window.cb2017 !== undefined) { //RM9563
+					$.colorbox({
+						href:url,
+						innerWidth: 428,
+						iframe:false,
+						maxHeight: 500,
+						onComplete: function() { $.colorbox.resize(); },
+						onClosed: function() {
+							$('.tnetmodal').show();
+							top.location.href=rwPage;
+						}
+					});
+				} else {
+					$.colorbox({
+						title:'',
+						href:url,
+						width: 500,
+						iframe:false,
+						maxHeight: 500,
+						onComplete: function() { $.colorbox.resize(); },
+						onClosed: function() {
+							$('.tnetmodal').show();
+							top.location.href=rwPage;
+						}
+					});
+				}
+			}
+		}
+	});
+}

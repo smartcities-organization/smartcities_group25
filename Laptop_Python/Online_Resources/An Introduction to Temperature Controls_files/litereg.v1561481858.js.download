@@ -1,0 +1,213 @@
+/* liteReg Object Dependencies:
+isEmail() function
+jquery.cookie.js
+JQuery 1.5 or later.
+*/
+
+var liteReg = {
+    checkForRegScript : '/mythomas/scripts/sso-get-acct-tinid.php',
+    createLiteRegScript : '/mythomas/scripts/sso-register.php',
+    flds : { fname : '', lname : '', email : '' },
+    debug : 0,
+    cmg : '',
+    /* 5-24-2017 extralite was added to allow litereg to work when only an email address was provided (RM 9552) */
+    extralite : '',
+    rsp : { err : {}, tinid : '' },
+    /* A fldxref entry here is only needed for those field names that don't match the external field
+    names. For instance, if the external field id is 'fname' (matches property in this class) then no
+    entry is needed, but if the external name field has an id of 'firstName' then the following entry
+    should be added to fldxref: "fname" : "firstName". */
+    fldxref : {},
+
+    init : function (args) {
+        if (args.debug == 1) { console.log('liteReg.init()'); }
+        // Form field Values
+        if ('fname' in args)    { this.flds.fname = args.fname; }
+        if ('lname' in args)    { this.flds.lname = args.lname; }
+        if ('email' in args)    { this.flds.email = args.email; }
+        if ('zip' in args)      { this.flds.zip = args.zip; }
+        if ('country' in args)  { this.flds.country = args.country; }
+        if ('company' in args)  { this.flds.company = args.company; }
+        if ('phone' in args)    { this.flds.phone = args.phone; }
+        if ('origin' in args)   { this.flds.origin = args.origin; }
+        if ('origin_2' in args) { this.flds.origin_2 = args.origin_2; }
+        // Settings (Non-form fields)
+        if ('cmg' in args)      { this.cmg = args.cmg; }
+        if ('debug' in args)    { this.debug = args.debug; }
+        if ('fldxref' in args)  { this.fldxref = args.fldxref; }
+        if ('extralite' in args)  { this.extralite = args.extralite; }
+    },
+
+    run : function(args) {
+        if (args.debug == 1) { console.log('liteReg.run()'); }
+        liteReg.init(args);
+
+        var dfd = new $.Deferred();
+        
+        liteReg.checkForReg().done(function(checkForRegData) {
+            if (liteReg.debug == 1) { console.log('checkForReg done'); }
+            if (checkForRegData.err.hasOwnProperty("msg")) {
+                liteReg.setErr({ 'type': 'f', 'fld': checkForRegData.err.fld, 'msg': checkForRegData.err.msg });
+                dfd.reject(liteReg.rsp);
+            } else if (checkForRegData.isregistered) {
+                /* If we find a registration in the lookup using the email address then we'll use the associated
+                tinid. The lookup process sets the tinid cookie to match the record found. */
+                dfd.resolve(liteReg.rsp);
+            } else {
+                /* If an existing account associated with the email doesn't exist then a lite registration will 
+                be created and we'll use the tinid from that. The lite registration process automatically sets
+                a tinid cookie. */
+                // Collect fields to be used in the liteReg process
+                var liteRegFlds = liteReg.getLiteRegFlds();
+                if (liteReg.debug == 1) { console.log(liteRegFlds); }
+                // Validate fields
+                var liteRegValErr = liteReg.liteRegValidate(liteRegFlds);
+                if (liteRegValErr.hasOwnProperty("msg")) {
+                    /* A message property indicates an object full of error info was returned. */
+                    liteReg.setErr(liteRegValErr);
+                    dfd.reject(liteReg.rsp);
+                } else {
+                    // Create LiteReg
+                    liteReg.createLiteReg(liteRegFlds).done(function(createLiteRegData) {
+                        if (liteReg.debug == 1) { console.log('createLiteReg done'); }
+                        if (createLiteRegData.response == 'Success') {
+                            if (liteReg.debug == 1) { console.log('createLiteReg SUCCESS'); }
+                            dfd.resolve(liteReg.rsp);
+                        } else {
+                            liteReg.setErr({ 'type' : 'i', 'fld' : '', 'msg' : 'liteReg.createLiteReg failed: ' + JSON.stringify(createLiteRegData) });
+                            dfd.reject(liteReg.rsp);
+                        }
+                    })
+                    .fail(function(createLiteRegData, exception) {
+                        if (liteReg.debug == 1) { console.log('createLiteReg fail'); }
+                        liteReg.setErr({ 'type' : 'i', 'fld': '', 'msg': 'Error (2): Status: ' + createLiteRegData.status + ' Exception: ' + exception });
+                        dfd.reject(liteReg.rsp);
+                    });
+                }
+            }
+        })
+        .fail(function(createLiteRegData, exception) {
+            if (liteReg.debug == 1) { console.log('checkForReg fail'); }
+            liteReg.setErr({ 'type' : 'i', 'fld': '', 'msg': 'Error (1): Status: ' + createLiteRegData.status + ' Exception: ' + exception });
+            dfd.reject(liteReg.rsp);
+        });
+
+        return dfd.promise();
+    },
+
+    setErr : function (errArgs) {
+        if (errArgs.type == 'f' && errArgs.fld.length > 0) {
+            // Convert the error field id to the corresponding external field id.
+            if (liteReg.fldxref.hasOwnProperty(errArgs.fld)) {
+                errArgs.fld = liteReg.fldxref[errArgs.fld];
+            }
+        }
+        liteReg.rsp.err = errArgs;
+    },
+
+    checkForReg : function () {
+        if (liteReg.debug == 1) { console.log('liteReg.checkForReg()'); }
+        var prm = $.ajax({
+            url: liteReg.checkForRegScript,
+            dataType: 'json',
+            data: { email : liteReg.flds.email, setcookies : 1, cmg : liteReg.cmg },
+            type: 'GET',
+            complete: function (jqXHR, textStatus) {
+                if (liteReg.debug == 1) { console.log('checkForReg complete'); }
+                if (liteReg.debug == 1 && textStatus != 'error' && jqXHR.hasOwnProperty('responseText')) {
+                    var d = $.parseJSON(jqXHR.responseText);
+                    if (d.hasOwnProperty('debug')) {
+                        liteReg.showDebug(d.debug,lbl='====== LITEREG AJAX SSO-GET-ACCT-TINID DEBUG ======');
+                    }
+                }
+            }
+        });
+        
+        return prm;
+    },
+    
+    getLiteRegFlds : function() {
+        var liteRegFlds = {
+            fname : liteReg.flds.fname,
+            lname : liteReg.flds.lname,
+            email : liteReg.flds.email,
+            email2 : liteReg.flds.email,
+            registration_type : 'lite'
+        };
+        // Optional fields:
+        if ('zip' in this.flds && this.flds.zip.length) { liteRegFlds.zip = this.flds.zip; }
+        if ('company' in this.flds && this.flds.company.length) { liteRegFlds.company = this.flds.company; }
+        if ('country' in this.flds && this.flds.country.length) { liteRegFlds.country = this.flds.country; }
+        if ('phone' in this.flds && this.flds.phone.length) { liteRegFlds.phone = this.flds.phone; }
+        if ('origin' in this.flds && this.flds.origin.length) { liteRegFlds.origin = this.flds.origin; }
+        if ('origin_2' in this.flds && this.flds.origin_2.length) { liteRegFlds.origin_2 = this.flds.origin_2; }
+        if(this.extralite) { liteRegFlds.extralite = this.extralite; }
+        return liteRegFlds;
+    },
+    
+    liteRegValidate : function(liteRegFlds) {
+        var err = {}
+        // Validation - These fields are required for Lite Registration.
+        if (!this.extralite) {	// 'extralite' only requires email address
+            if (!liteRegFlds.fname.length) {
+                err = { 'type': 'f', 'fld': 'fname', 'msg': '"First Name" is required' };
+            }
+            if (!liteRegFlds.lname.length) {
+                err = { 'type': 'f', 'fld': 'lname', 'msg': '"Last Name" is required' };
+            }
+        }
+        if (!liteRegFlds.email.length) {
+            err = { 'type': 'f', 'fld': 'email', 'msg': '"Email" is required' };
+        }
+        else if (!isEmail(liteRegFlds.email)) {
+            err = { 'type': 'f', 'fld': 'email', 'msg': '"Email" is not formatted properly' };
+        }
+        return err;
+        
+    },
+    
+    createLiteReg : function(liteRegFlds) {
+        var prm = $.ajax({
+            url: liteReg.createLiteRegScript,
+            dataType: 'json',
+            data: liteRegFlds,
+            type: 'POST'
+        });
+        return prm;
+    },
+
+    showDebug : function (d,lbl) {
+        // d (the debug info) must be passed in an array or a JSON stringified array.
+        if(typeof lbl === "undefined") { lbl='====== DEBUG ======'; }
+        if (d!='') {
+            if (!$.isArray(d)) { d = $.parseJSON(d); }
+            try { console.groupCollapsed(lbl) } catch(e){}
+            $.each(d,function(idx,val){ console.log(val + '\n'); });
+            try { console.groupEnd() } catch(e){ }
+        }
+    },
+    
+    showTinidFld : function (elm, tinid) {
+        /* This method is just for debugging.
+        The elm param is the page element to which the tinid debug block should be appended. */
+        var html = $("<div id=\"tind_dev_debug\"></div>")
+            .css({ 'clear': 'left','float': 'left', 'display': 'inline-block', 'padding': '10px', 'background-color': '#ebedf6' });
+        html.append("<b>Current Tinid:</b>").css({ 'font-size': '12px' }).append("<br />");
+        html.append("<div id=\"tind_dev_debug_tinid\" class=\"clearfix\">");
+        html.find("#tind_dev_debug_tinid").css({ 'border': '1px solid black', 'width': '180px', 'position': 'relative', 'padding': '0 0 0 5px' })
+            .append("<span id=\"dispTinid\">" + tinid + "</span><a href=\"#\" id=\"RemoveTinidCookie\">Delete Tinid</a>");
+        html.find("#RemoveTinidCookie").css({ 'border-left': '1px solid black', 'font-size': '12px', 'padding': '1px 5px', 'margin': '0 auto', 'float': 'right', 'color': '#ffffff', 'background-color': '#b05f00' });
+        elm.append(html);
+        
+        $("#RemoveTinidCookie").click(function() {
+            $.cookie('tinid', '', { expires: -1, path: '/', domain: 'thomasnet.com' });
+            $.cookie('UUID', '', { expires: -1, path: '/', domain: 'thomasnet.com' });
+            $("#dispTinid").html(($.cookie('tinid') || ''));
+            return false;
+        });
+    },
+    
+    fillTinid : function() {
+        $("#dispTinid").html(($.cookie('tinid') || ''));
+    }
+}

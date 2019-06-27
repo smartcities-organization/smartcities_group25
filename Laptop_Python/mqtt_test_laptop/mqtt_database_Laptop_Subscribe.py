@@ -21,14 +21,12 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
 
-    payload = msg.payload.decode("utf-8")
-
-    if payload == "Hello":
+    if msg.payload == "Hello":
         print("Received message #1, do something")
         # Do something
 
 
-    if payload == "World!":
+    if msg.payload == "World!":
         print("Received message #2, do something else")
         # Do something else
  
@@ -37,7 +35,7 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
  
-client.connect("test.mosquitto.org", 1883, 60)
+client.connect("out.mosquitto.org", 1883, 60)
 client.subscribe("SmartCities/#")
  
 # Process network traffic and dispatch callbacks. This will also handle
@@ -45,5 +43,3 @@ client.subscribe("SmartCities/#")
 # https://github.com/eclipse/paho.mqtt.python
 # for information on how to use other loop*() functions
 client.loop_forever()
-
-print ("loop done")
