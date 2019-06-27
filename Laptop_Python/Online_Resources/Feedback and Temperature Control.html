@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- saved from url=(0074)http://newton.ex.ac.uk/teaching/CDHW/Feedback/SystemModel.html#SystemModel -->
+<html class="gr__newton_ex_ac_uk"><!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    DO NOT EDIT THIS PAGE! See /schooldocs/it/
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Feedback and Temperature Control</title>
+
+<link rel="SHORTCUT ICON" href="http://newton.ex.ac.uk/favicon.ico"> 
+<link media="screen" rel="stylesheet" type="text/css" href="./Feedback and Temperature Control_files/screen3.css"> 
+<link media="print" rel="stylesheet" type="text/css" href="./Feedback and Temperature Control_files/print.css">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta name="viewport" content="width = 880">
+
+<link media="screen" rel="stylesheet" type="text/css" href="./Feedback and Temperature Control_files/serif-style.css"><link media="screen" rel="stylesheet" type="text/css" href="./Feedback and Temperature Control_files/nosidebar.css">
+<meta name="keywords" content="Physics, degree, PhD">
+</head>
+<body data-gr-c-s-loaded="true">
+<!--  START OF NEW HEADER -->
+<a class="displaynone" id="x_top" href="http://newton.ex.ac.uk/teaching/CDHW/Feedback/SystemModel.html#x_content">Skip to content</a>
+<div id="x_wrapper">
+
+<table width="100%" id="x_header" cellpadding="0" cellspacing="0" border="0"><tbody><tr>
+  <td valign="top" id="x_logo">
+     <a href="http://www.ex.ac.uk/" title="University of Exeter"><img src="./Feedback and Temperature Control_files/logo.gif" alt="University of Exeter" class="logo" width="162" height="60"></a>
+
+  </td><td valign="top" id="x_department" align="left">
+    <a href="http://newton.ex.ac.uk/" class="verytop">Physics and Astronomy</a>
+    
+      
+  </td><td id="x_topnav" align="right" valign="top">
+      <div id="supernav">
+          <a href="http://newton.ex.ac.uk/contact.html">Contact Us</a>
+          | <a href="http://newton.ex.ac.uk/schooldocs/">Staff</a>
+          | <a href="http://newton.ex.ac.uk/teaching/">Students</a>
+          | <a href="http://www.ex.ac.uk/myexeter/">MyExeter</a>
+          | <a href="http://newton.ex.ac.uk/quick-links/">Site map</a>
+        </div>
+
+        <div id="search">
+	  <form method="get" action="http://newton.ex.ac.uk/cgi-bin/htsearch" name="htsearchform" id="searchbox">
+                        <input class="search" id="words" name="words" type="text" size="23" maxlength="80" title="Search the site" onfocus="if(this.value==this.defaultValue)  this.value=&quot;&quot;;" value="  Search Physics">
+                       <input type="hidden" name="config" value="htdig">
+<input name="ssubmit" class="button" value="Search" type="submit">
+
+          </form>
+        </div>
+    </td></tr></tbody></table>
+<!-- NB div "wrapper" remains open -->
+<!--  END OF NEW HEADER -->
+
+
+      <table border="0" cellpadding="0" cellspacing="0" class="mainnav">
+        <tbody><tr>
+	<td><a href="http://newton.ex.ac.uk/" title="School" class="studying">Physics Home</a></td>
+
+<td><a href="http://newton.ex.ac.uk/admissions/" title="Admissions" class="working">Study here</a></td>
+
+<td><a href="http://newton.ex.ac.uk/teaching/" title="Teaching" class="alumni">Our Teaching</a></td>
+
+<td><a href="http://newton.ex.ac.uk/research/" title="Research" class="research">Our Research</a></td>
+
+<td><a href="http://newton.ex.ac.uk/general/centres.html" title="Centres" class="working">Our Centres</a></td>
+
+<td><a href="http://newton.ex.ac.uk/features/" title="News" class="business">News</a></td>
+
+<td><a href="http://newton.ex.ac.uk/research/positions/" title="Jobs" class="jobs">Work here</a></td>
+
+<td><a href="http://emps.exeter.ac.uk/" title="Engineering, Mathematics and Physical Sciences" class="emps">EMPS</a></td>
+
+    
+    </tr></tbody></table>
+
+
+
+<table cellspacing="0" cellpadding="0" class="phy-toptable">
+
+<tbody><tr>
+
+<!-- SIDEBARROWSPAN = 2 -->
+
+
+
+<td valign="top">
+
+
+</td></tr><tr>
+<td class="phy-content" id="top" valign="top">
+<div class="e-topcrumbs">  <a href="http://newton.ex.ac.uk/">Home</a>  <b>›</b> <a href="http://newton.ex.ac.uk/">Our Teaching</a> <b>›</b> <a href="http://newton.ex.ac.uk/teaching/">Resources</a> <b>›</b> <a href="http://newton.ex.ac.uk/teaching/CDHW/">CDHW</a> <b>›</b> <a href="http://newton.ex.ac.uk/teaching/CDHW/Feedback/">Feedback</a> <b>›</b> <span class="crumbs_here">SystemModel.html</span></div>
+
+<a class="displaynone" id="x_content" href="http://newton.ex.ac.uk/teaching/CDHW/Feedback/SystemModel.html#x_top">Back to top</a>
+
+<div class="phy-realcontent">
+
+
+
+
+
+
+
+
+
+
+<hr>
+<h2>System Model</h2>
+
+<p><i>Previous: <a href="http://newton.ex.ac.uk/teaching/CDHW/Feedback/index.html#Introduction">Introduction.</a></i></p>
+
+<p>
+The system considered in this document comprises an electrical heater
+of heat capacity <i>C</i><sub>h</sub> connected via a thermal
+resistance <i>R</i><sub>ho</sub> to the oven, heat capacity
+<i>C</i><sub>o</sub>.  The oven loses heat to the environment, at
+temperature <i>T</i><sub>e</sub>, through the thermal resistance
+<i>R</i><sub>o</sub> of its insulation. The temperature
+controller adjusts the power dissipated in the heating elements,
+<i>W</i>, by comparing the oven temperature,
+<i>T</i><sub>o</sub>, with the set-point temperature
+<i>T</i><sub>s</sub>.
+</p>
+
+
+
+
+<!-- START OF /Figure+Caption.html -->
+
+<table align="center" border="0">
+	<tbody><tr><td>
+	<p class="figure">
+		
+		<object style="width:25.688em; height:9.188em;" data="./Feedback and Temperature Control_files/system_model.svg" type="image/svg+xml">
+			<a href="./Feedback and Temperature Control_files/system_model.svg" title="SVG version for higher-quality image">
+			<img style="width:25.688em; height:9.188em;" alt="Figure" src="./Feedback and Temperature Control_files/system_model.png"></a>
+		</object>
+		
+	</p>
+	</td></tr><tr><td style="text-align: center;">Figure 1. Equivalent circuit representation of system model.</td></tr>
+</tbody></table>
+
+
+<!-- END OF /Figure+Caption.html -->
+
+
+
+
+<p>
+The red symbols on the diagram are thermal components; the black ones are
+electrical devices.  Dashed lines represent transducers:  a thermometer in one case,
+conversion of electrical current
+flowing through the heater into heat (thermal current <i>W</i>) in the other.
+With the notable exception of cryogenic systems, the thermometer
+time constant is usually very small so its effects
+will be tacitly assumed to be negligible during much of the following discussion.  However, it will
+be mentioned in the final section which discusses the <a href="http://newton.ex.ac.uk/teaching/CDHW/Feedback/PracticalMatters.html#Noise">frequency domain
+behaviour</a> of the system.
+</p>
+
+<div class="NOPRINT">
+<p align="right"><i>Next: <a href="http://newton.ex.ac.uk/teaching/CDHW/Feedback/ControlTypes.html">Types of Feedback Control.</a>
+</i></p>
+</div>
+
+
+
+
+
+</div>
+
+<div class="phy-forcewidth">
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+</div>
+</td></tr></tbody></table> <!-- End of main layout table -->
+<hr id="xphy-bottom2">
+
+<div class="noprint">
+<table width="100%" border="0">
+<tbody><tr>
+<td valign="middle" align="left">
+
+<a href="http://validator.w3.org/check?uri=referer">Validate</a>
+ &nbsp;  
+<a href="http://validator.w3.org/checklink?uri=referer">Link-check</a>
+
+
+</td><td valign="middle" align="center">
+
+<a href="http://www.exeter.ac.uk/copyright/">© Copyright &amp; disclaimer</a>
+
+</td><td valign="middle" align="center">
+
+<a href="http://www.exeter.ac.uk/privacy/">Privacy &amp; cookies</a>
+
+</td><td valign="middle" align="right">
+
+<!-- AddThis Button BEGIN -->
+<a href="http://www.addthis.com/bookmark.php" target="sharethis"><img class="addit" src="./Feedback and Temperature Control_files/addthis.gif" width="125" height="16" border="0" alt="Share" title="Add this page to your favourite social networking sites"></a>
+<!-- AddThis Button END -->
+
+</td></tr></tbody></table>
+
+</div>
+
+</div> <!-- wrapper -->
+<a class="displaynone" href="http://newton.ex.ac.uk/teaching/CDHW/Feedback/SystemModel.html#x_top">Back to top</a>
+
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script src="./Feedback and Temperature Control_files/ga.js.download" type="text/javascript"></script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-7878092-5");
+pageTracker._setDomainName(".ex.ac.uk");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+
+
+</body></html>

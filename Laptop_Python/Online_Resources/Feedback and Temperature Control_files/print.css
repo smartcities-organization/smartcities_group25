@@ -1,0 +1,832 @@
+
+.e-topcrumbs, .e-postlinks, #pexbottom, td.verytop div a, table#e-topbar {
+	display: none;
+}
+
+
+/*
+  ========================================================================
+	GENERAL SETUP
+  ======================================================================== 
+*/
+
+BODY {  
+        margin: 0;
+        margin-top: 10 px;
+        padding: 0;
+	font-family: times, serif;
+	font-size: 12pt ! important;
+}
+
+
+BODY i {
+	font-family: times, serif;
+	font-style: italic ! important;
+}
+
+BODY strong {
+	font-family: times, serif ! important;
+	font-weight: bold;
+}
+
+#e-header {
+	font-size: 100%;
+        display: inline;
+	font-family: times, serif;
+}
+
+h1, h2, h3, h4, h5, #e-header .topbar A,
+h1 *, h2 *, h3 *, h4 *, h5 *, #e-header A,
+.h1 *, .h2 *, .h3 *, .h4 *, .h5 *, .verytop, .verytop1,
+.pexcontent th * {
+	font-family: Helvetica, sans-serif;
+	font-weight: bold; 
+}
+
+#e-header A, #pexsidebar A, #e-extras A, .sidebar A, .box A {
+	text-decoration: none; 
+}
+
+div.toc {
+	display: none;
+}
+
+/*
+    ======================================================================
+	COLORS
+    ====================================================================== 
+*/
+
+
+#e-topbar tr td {
+	margin-left: 5px !important;
+}
+
+
+#e-header table tr td .e-crumbs, #e-header table tr td .e-crumbs a,
+#e-header table tr td.e-crumbs, #e-header table tr td.e-crumbs a {
+	font-weight: bold;
+	text-align: right !important;
+}
+
+#e-header table tr td .e-crumbs .crumbs_here,
+#e-header table tr td.e-crumbs .crumbs_here {
+}
+
+#e-header table tr td.e-crumbs {
+	text-align: right !important;
+ 	padding: 2px;
+	padding-bottom: 2px;
+	padding-left: 0px;
+	padding-top: 0px;
+}
+
+
+.searchbox {
+	padding: 0px;
+	margin: 0px;
+}
+
+.e-crumbs a:hover, #pexsidebar a:hover { 
+}
+
+#e-header td A:hover { 
+}
+
+/* ----- SIDEBAR COLORS ------------------------------------------- */
+
+#pexsidebar .title,  #pexsidebar .subtitle {
+}
+
+
+/* ----- CONTENT COLORS ------------------------------------------- */
+
+
+span.strong {
+	font-weight: bold;
+}
+
+hr.thick {
+	height: 2px;
+}
+
+
+/*
+  ========================================================================
+	HEADER 
+  ======================================================================== 
+*/
+
+
+h1, .h1 {
+	vertical-align: middle;
+/*	text-align: center;*/
+	margin: 0px;
+	padding: 0px;
+	font-size: x-large;
+}
+
+a.verytop {
+	color: black;
+	font-size: 32px;
+	margin-top: 100px;
+	border: solid red 0px;
+}
+
+.verytop1 {
+	color: black;
+	font-size: 26px;
+}
+
+#e-header .bar2, #e-header .bar2here, 
+#e-header .topbar, #e-header .tophere 
+{
+        font-weight: bold ! important;
+}
+
+#e-header table tr td.topbar {
+	vertical-align: bottom;
+}
+
+#e-header table tr td.topbar table tr td.topbar a,
+#e-header table tr td.topbar table tr td.topbar
+ {
+	vertical-align: top;
+}
+
+
+/* ------ Padding, borders and alignment --------------------------------*/
+
+.e-toptable {
+	margin: 0px;
+}
+
+
+#e-header table, #e-header table tr,  #e-header table tr td,
+#e-header table tr.topbar td.h1 {
+	border: solid #006699 0px;
+        text-decoration: none;
+	text-align: center;
+}
+
+
+span.topbar {
+	width: 10em;
+}
+
+#e-header td.h1 img {
+	margin: 0px;
+}
+
+#e-header td.h1 .uoe, #e-header td.h1 h1,
+ #e-header td.searchbar {
+	padding: 0px;
+	margin: 0px;
+ 	border: solid #00ff00 0px;
+}
+
+#e-header tr td.search, .search {
+	padding: 0px;
+	padding-bottom: 4px;
+	vertical-align: bottom;
+	margin: 0px;
+	border-bottom: solid white 1px;
+}
+
+#e-header table tr td form, #e-header table tr td form input {
+	padding: 0px;
+	margin: 0px;
+	display: inline;
+}
+
+#e-header h1.header, #e-header td.header, #e-header td.topbar,
+#e-header td.h1, #e-header td.h1 h1   {
+	margin-top: 0px;
+	padding-top: 0px;
+	vertical-align: middle;
+}
+
+/* padding on the left or right kills NS4 */
+
+	#e-header td.topbar, #e-header td.tophere,
+	#e-header td a.bar2, #e-header td a.bar2here,
+	#e-header td.bar2, #e-header td.bar2here, #e-header td.bar2here, 
+	#e-header td.spacer, #e-header td.spacerhere
+	{
+		padding-top: 3px;
+		padding-bottom: 3px;
+		vertical-align: bottom;
+	}
+
+	#e-header td a.bar2here {
+		padding-top: 1px;
+	}
+
+	#e-header table tr td.tophere
+	{
+		border: solid white 1px;
+		border-bottom: solid #4f94cd 1px;
+	}
+
+
+
+#e-header table tr td #e-topbar tr td.spacer,
+#e-header table tr td #e-topbar tr td.spacerhere {
+	border-bottom: solid white 1px;
+}
+
+#e-header table tr  td.topbar {
+	border-width: 0px;
+}
+
+#e-header table tr  td table tr td.topbar a {
+}
+
+#e-header table tr  td table tr td.topbar {
+	border: solid white 1px;
+}
+
+
+
+
+#e-header table #pex_secondr
+{
+}
+
+#e-header table tr.topbar td.logo
+{
+	padding-right: 20px;
+	border-bottom: solid white 1px;
+}
+
+
+
+/*====================================================================== */
+
+#e-header td span.uoe {
+        font-size: 165%;
+        display: inline;
+        vertical-align: middle;
+        border: solid #00ff00 0px;
+}
+
+#e-sop {
+	text-align:center;
+	vertical-align: bottom;
+}
+
+
+ 
+/* NB: These next two must be in this order */
+#pexsidebar {
+	margin: 3px;
+	margin-top: 0px;
+	padding-right: 0px;
+	padding-left: 0em;
+	left: 0px;
+	vertical-align: top;
+	font-size: 90%;    
+ }
+
+/* NB: These next two must be in this order */
+#pexsidebar A, .box A {
+        display: block;
+}
+
+#pexsidebar img {
+	vertical-align: middle ! important;
+}
+
+.box_nobreak A {
+        display: inline;
+}
+
+.sidebar {
+	width: 19%;
+	float: right;
+	vertical-align:middle;
+}
+
+/* 
+ Side menus 
+*/
+
+#pexsidebar, .leftcol2  {
+	padding-right: 0px;
+	margin-top: 0px;
+	border-right: dashed #b0c4de 1px;
+}
+
+#pexsidebar .dir, #pexsidebar .submenu {
+	display: block;	
+	padding: 4px;
+	padding-left: 10px;
+	margin: 0px;
+	margin-left: 0px;
+	margin-right: 5px;
+}
+
+#pexsidebar .submenu {
+	margin-right: 0px;
+}
+
+#pexsidebar {
+	width: 195px;
+}
+
+#pexsidebar a, #pexsidebar .urhere, #pexsidebar .submenutitle {
+	padding-bottom: 3px;
+	padding-top: 3px;
+	border-top: solid #99ccff 1px;
+	margin-left: 1em;
+}
+
+#pexsidebar .submenutitle {
+	border-top: dashed white 0px;
+	margin-left: 1em;
+}
+
+#pexsidebar .submenu {
+	border-right: solid #99ccff 1px;
+	border-top: solid #99ccff 1px;
+ 	border-bottom: solid #99ccff 1px;
+}
+
+#pexsidebar .white {
+}
+
+#pexsidebar .submenu a, #pexsidebar .submenu .urhere {
+	border-top: solid white 1px;
+	border-top: dashed #99ccff 1px;
+	text-align: right;
+}
+
+#pexsidebar div.dir div:first-child a {
+	border-top: dashed white 0px;
+}
+
+
+#pexsidebar .urhere {
+	text-align: left;
+	text-indent: -1em;
+}
+
+
+#pexsidebar .urhere:first-letter {
+	font-weight: bold;
+	border-top: 0px;
+}
+
+#pexsidebar .toc, #pexsidebar .tohome  {
+	margin-left: 0em;
+	padding-left: 2em;
+	text-indent: -1em;
+	border-top: solid #6699cc 2px;
+}
+
+
+#pexsidebar .title, #pexsidebar .subtitle,
+  #pexsidebar .submenu .title {
+	padding-left: 0em;
+	text-align: left;
+	border-top: solid #6699cc 2px;
+	margin-top: 5px;
+	font-weight: bold;
+	padding-bottom: 3px;
+	padding-top: 3px;
+}
+
+#pexsidebar .title {
+	margin-top: 0px;
+	padding-top: 0px;
+	font-weight: bold;
+	font-family: times, serif;
+}
+
+ #pexsidebar .submenu .title {
+	text-align: right;
+	border: 0px;
+	margin-top: 0px;
+}
+
+#pexsidebar .title {
+	font-size: 125%;
+
+	margin-top: 10px;
+	border-top: solid #6699cc 0px;
+	margin-bottom: 1px;
+	border-bottom: solid #6699cc 0px;
+}
+
+
+
+/* These need to be near the end */
+.noleftpad, .noleftpad a {
+	padding-left: 0em;
+	text-indent: 0em;
+}
+
+.noleftpad {
+	margin-top: 10px;
+	border: solid #6699cc 1px;
+}
+
+/*======================================================================
+	BOXES
+  ====================================================================== */
+ 
+
+table.box {
+	border: 1px;
+}
+
+.box td, .box th {
+	margin: 0px;
+}
+
+
+ table.box th {
+	border-bottom: solid 1px #99cccc;
+}
+
+ .box1 {
+	border: solid 2px #99cccc;
+}
+
+table.right, table.left  {
+	padding: 5px;
+	padding-top: 0;
+}
+
+table.right {
+	padding-right: 0;
+	float: right;
+}
+
+table.left {
+	float: left;
+	padding-left: 0;
+}
+
+table.bottom, table.top {
+	padding-bottom: 0;
+}
+
+/*======================================================================
+	CONTENT 
+  ====================================================================== */
+ 
+/*
+ {
+	font-weight: normal;
+	line-height: 100%;
+	margin-left: 10px;
+	padding: 10px;
+	padding-left: 15px;
+	z-index: 1;
+	vertical-align: top;
+}
+*/
+
+
+ .leftcol { 
+	text-align: right; 
+}
+
+ .centrecol,  .centercol {
+	 text-align: center; 
+}
+
+ .rightcol { 
+	text-align: left; 
+}
+
+ .left {
+	float: left;
+}
+
+td > h2:first-child  {
+	text-align: center;
+	padding-left: 0ex;
+	margin-top: 0.5ex;
+}
+
+ h1,  .h1 {
+	font-size: 200%;
+	margin-bottom: 1ex;
+	margin-top: 4ex;
+}
+
+td h2  {
+	font-size: 150%;
+	line-height: 110%;
+	margin-bottom: 0.5ex;
+	margin-top: 3.6ex;
+	padding-left: 0ex;
+}
+
+ h3,  .h3 {
+	font-size: 120%;
+	margin-bottom: 0.5ex;
+	margin-top: 2.5ex;
+	padding-top: 0ex;
+	padding-bottom: 0ex;
+	border: none white 0px;
+}
+tr td h2 + h3 {
+	margin-top: 1ex ! important;
+}
+
+ h3:first-child,  h4:first-child {
+	margin-top: 0.5ex;
+}
+
+p, ul, ol, dl {
+	margin-top: 1ex;
+	margin-bottom: 1ex;
+	padding-top: 0ex;
+	border:  none white 0px;
+	padding-bottom: 0ex;
+}
+	
+
+ h4,  .h4 {
+	font-size: 100%;
+	margin-bottom: 0.5px;
+	margin-top: 1.5ex;
+}
+
+ h1:first-child,  h2:first-child,
+ h3:first-child,  h4:first-child {
+        margin-top: 0ex;
+}
+
+
+ div.whatnext {
+	border-top:  solid thin #0099cc ;
+	margin-top: 10px;
+	text-align: center;
+	width: 100%;
+}
+
+ span.next {
+	text-align: right;
+	padding-left: 20px;
+}
+
+ span.up {
+	padding-right: 20px;
+	padding-left: 20px;
+	text-align: center;
+}
+
+content span.prev {
+	float: left;
+	text-align: left;
+	padding-right: 20px;
+}
+
+pre.code {
+	border: thin solid gray;  
+	margin-top: 10pt; 
+	margin-bottom: 5pt; 
+	margin-left: 10pt; 
+	padding-left: 10pt; 
+	padding-right: 20pt; 
+	padding-top: 10pt; 
+	padding-bottom: 10pt; 
+	white-space: pre;
+}
+
+
+
+/*
+  ========================================================================
+	POST-LINKS & CRUMBS
+  ======================================================================== 
+*/
+.e-postlinks, .e-crumbs {
+	display: none;
+}
+
+
+br.pagebreak {
+	page-break-after: always;
+}
+
+/*
+  ======================================================================
+	MISC 
+  ====================================================================== 
+*/
+
+#pexbottom { margin-top: 0px; }
+
+/* ----- 'skip navigation' links --------------------- */
+.ns4 a, .ns4 {
+   display: inline;
+}
+
+#e-header .invisible, #e-header a.invisible,  a.ns4:visited {
+   display: none;
+}
+
+	h1, h2, h3, h4, h5, h6, dt { 
+   	     page-break-after: avoid;
+   	     page-break-inside: avoid;
+	}
+
+	* { 
+ 	       text-decoration: none;
+  	      orphans: 2;
+	}
+
+	.noprint, .ns4, .ns4 a, .invisible, #pexsidebar, #e-extras, 
+	#e-header table tr td.topbar, #e-header table tr td.search,
+	#e-header table #pexx_secondr, #e-header table #pex_secondr,
+	#e-header table tr td.e-crumbs  {
+ 	       position: absolute;
+  	      visibility: hidden;
+  	      display: none;
+	}
+
+	#e-header table tr td {
+		vertical-align: middle;
+	}
+
+
+
+/* For colloquia etc. */
+table.dated tr td {
+	padding-left: 1em;
+	padding-right: 0em;
+	padding-bottom: 2ex;
+	vertical-align: top;
+	text-align: left;
+}
+
+table.dated tr td:first-child {
+	padding-left: 0em;
+	text-align: right;
+	white-space: nowrap;
+}
+
+.redbox {
+	border: solid red 1px; 
+	padding: 5px;
+}
+
+
+.mylist dt {
+	padding-left: 2em;
+	text-indent: -2em;
+}
+
+table.rightfloat {
+	float: right;
+	text-align: right;
+}
+
+/* IE 5 bugs */
+#e-header table tr #e-sop h1 {
+	border: solid #006699 0px;
+}
+
+#e-header table tr, #e-header table tr td {
+	padding-bottom: 0px ! important;
+}
+/* End of IE 5 bugs */
+
+
+.pictrailhere img, .pictrail img {
+	padding: 2px;
+	margin: 0px;
+	border: solid white 1px
+}
+.pictrailhere, .pictrail {
+	padding: 0px;
+}
+
+.pextoplinks a.pictrailhere {
+	border-bottom: solid blue 3px;
+}
+
+.pexbottomlinks .pictrailhere img {
+	padding-top: 3px;
+	border-top: solid blue 3px ! important;
+}
+
+.nextprev, a.nextprev {
+	font-size: 150%;
+	text-decoration: none;
+}
+
+
+.slidecentered td:first-child {
+	padding-right: 0px;
+}
+
+.slidecentered td {
+	padding-left: 17px;
+	padding-right: 17px;
+}
+
+
+td.third, td.news, td.leftcol2 {
+	margin-left: 10px;
+	margin-right: 10px;
+	min-width: 210px;
+	max-width: 210px;
+}
+
+.news {
+	text-align: center;
+}
+
+#pexbottom .e-crumbs {
+	padding-left: 10px;
+}
+
+
+/* IE5: \*/
+
+.ns4 {
+	display: none;
+}
+
+
+/* End of IE 5 */
+
+
+
+
+/* Table debug 
+
+#e-header table tr td, #e-header table tr td  table tr td {
+	border: 1px solid #cc0000 ! important;
+} 
+
+#e-header table tr td img {
+	border: 1px solid #00cc00 ! important;
+} 
+  */
+
+
+
+#supernav, .mainnav, #search, img.uofe, .displaynone, .e-topcrumbs{
+	display: none !important;
+}
+
+img {
+	border: 0px;
+}
+
+div#wrapper, div#wrapperinner, div#header {
+	display: inline;
+}
+
+div#wrapper div#wrapperinner div#header a.verytop {
+	position: absolute;
+	font-size: 26px;
+	margin-left: 20px;
+	top: 1px;
+	clear: both;
+}
+
+div.phy-realcontent {
+	clear: both;
+}
+
+
+/*
+  ========================================================================
+    Charles' date system
+  ========================================================================
+ */
+.oldDate {
+	display: none ! important;
+}
+
+span.toparrow {
+	display: none;
+}
+
+.toc, .floatsidebar {
+	display: none;
+}
+
+/*
+  ========================================================================
+    Outline page breaks
+  ========================================================================
+ */
+
+div.outline div.h2 {
+	page-break-before: always;
+	text-align: center;
+	font-size: 200%;
+}
+
+div.outline div.h2:first-child {
+	page-break-before: avoid;
+}

@@ -1,0 +1,7 @@
+/* Article-Style.css CDHW's tweaks to the newton styles */
+
+.phy-realcontent, .phy-realcontent strong, .phy-realcontent em {font-family:"Times New Roman",Times,serif; font-size: 12pt; }
+.phy-realcontent table { margin-top:12pt; margin-bottom: 12pt; }
+
+p.figure { text-align: center; margin-top: 12pt; margin-bottom: 12pt; }
+p.figure + p { margin-top: 0pt; } 

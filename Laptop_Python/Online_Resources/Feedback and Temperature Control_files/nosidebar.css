@@ -1,0 +1,9 @@
+/*
+ * For pages with no sidebar. The gap is chosen to roughly align
+ * The side of the text with the "E" in the Exeter logo
+ */
+
+div.mainnav, td.phy-content {
+	padding-left: 10px !important;
+}
+
