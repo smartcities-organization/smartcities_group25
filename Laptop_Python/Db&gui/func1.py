@@ -1,10 +1,10 @@
 #presence dependent light control
 
 import time
-#import grovepi
 import sqlite3
 from tkinter import *
 import matplotlib.pyplot as plt
+import matplotlib
 import paho.mqtt.client as mqtt
 import datetime
 
@@ -12,107 +12,88 @@ import datetime
 # Connect the Grove Light Sensor to analog port A0
 # SIG,NC,VCC,GND
 light_sensor = 0
-sensor_value =""
-
-# Connect the LED to digital port D4
-# SIG,NC,VCC,GND
-#led = 4
-
-# Turn on LED once sensor exceeds threshold resistance
-threshold = 10
-
-#grovepi.pinMode(light_sensor,"INPUT")
-#grovepi.pinMode(led,"OUTPUT")
-
-#people count via mqtt
-PeopleCount =1
+sensor_value = ''
+topic_value = ''
 
 #database
-conn = sqlite3.connect('Light.db')
+conn = sqlite3.connect('Database_sensor.db')
 print('database created')
-c= conn.cursor()
+Lt= conn.cursor()
 
-c.execute('CREATE TABLE IF NOT EXISTS LightData(datestmap TEXT,value TEXT)')
-
-#GUI
-root = Tk()
- 
-def plot():
-    c.execute("SELECT datestmap, value FROM LightData")
-    dates=[]
-    values=[]
-    for row in c.fetchall():
-        dates.append(datetime.datetime.fromtimestamp(row[0]))
-        values.append(row[1])
-    plt.plot_light(dates,values)
-    plt.show()
-
-
+Lt.execute('CREATE TABLE IF NOT EXISTS Data(Datestmp TEXT,Topic TEXT,Sensor_Data TEXT )')
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     
-
-
- 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     global sensor_value
+    global topic_value
+
+    sensor_value = str(msg.payload)
+    sense = 0x0F & sensor_value
+    print('hi')
+    topic_value = str(msg.topic)
+    print(sensor_value)
+
+    unix = int( time.time())
+    date = str(datetime.datetime.fromtimestamp(unix).strftime('%Y-%m-%d %H:%M:%S'))
+    if topic_value== 'SmartCities/Temperature':
+        Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/Temperature' ORDER BY Datestmp DESC LIMIT 1")
+        result = Lt.fetchone()
+    elif topic_value== 'SmartCities/Humidity':
+        Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/Humididty' ORDER BY Datestmp DESC LIMIT 1")
+        result = Lt.fetchone()
+    elif topic_value== 'SmartCities/PeopleCount':
+        Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/PeopleCount' ORDER BY Datestmp DESC LIMIT 1")
+        result = Lt.fetchone()
+    elif topic_value== 'SmartCities/Motion':
+        Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/Motion' ORDER BY Datestmp DESC LIMIT 1")
+        result = Lt.fetchone()
+    elif topic_value== 'SmartCities/Light':
+        Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/Light' ORDER BY Datestmp DESC LIMIT 1")
+        result = Lt.fetchone()
+    else:
+        result = None
+
+    if result is None:
+        Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
+    else:
+        if( sensor_value != result[2]):
+            print('inside',sensor_value)
+            Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
+        else:
+            print("repeated data")
+    conn.commit()
 
     print(msg.topic+" "+str(msg.payload))
+    print('hi')
 
-    if msg.topic == "SmartCities/sensor":
+
+    if msg.topic == "SmartCities/Temperature":
         sensor_value = msg.payload
-        #print("Received message #1, do something")
+        topic_value = msg.topic
+        print(sensor_value)
+        print("Received message #1, do something")
         # Do something
 
 
     if msg.payload == "World!":
         print("Received message #2, do something else")
-        # Do something else
+        #Do something else
 
 
-
-
-button_1 = Button(root,text ='plot',command=plot)
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
- 
-client.connect("test.mosquitto.org", 1883, 60)
+client.connect("iot.eclipse.org", 1883, 60)
 client.subscribe("SmartCities/#")
+client.loop_forever()
+
+
+Lt.close()
+conn.close()
 
 
 
-
-while True:
-    try:
-        #if PeopleCount>=1:
-        # Get sensor value
-            #sensor_value = grovepi.analogRead(light_sensor)
-
-            # Calculate resistance of sensor in K
-            #resistance = (float)(1023 - sensor_value) * 10 / sensor_value
-
-            #if resistance > threshold:
-                # Send HIGH to switch on LED
-            #    grovepi.digitalWrite(led,1)
-            #else:
-                # Send LOW to switch off LED
-             #   grovepi.digitalWrite(led,0)
-
-            #print("sensor_value = %d resistance = %.2f" %(sensor_value,  resistance))
-        unix = int( time.time())
-        date = str(datetime.datetime.fromtimestamp(unix).strftime('%Y-%m-%d %H:%M:%S'))
-        c.execute("INSERT INTO LightData(datestmap,value)VALUES (?,?)",
-        (date,sensor_value))
-        conn.commit()
-        time.sleep(2)
-
-    except IOError:
-        print ("Error")
-
-    except KeyboardInterrupt:
-        c.close()
-        conn.close()
