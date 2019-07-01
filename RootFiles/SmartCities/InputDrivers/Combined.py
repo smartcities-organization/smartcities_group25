@@ -66,8 +66,8 @@ def TempHum_job():
 	if math.isnan(temp) == False and math.isnan(humidity) == False:
 		if temp > 0:
 			print("temp = %.02f C humidity =%.02f%%"%(temp, humidity))
-			publish.single("SmartCities/Temperature", temp, hostname="test.mosquitto.org")
-			publish.single("SmartCities/Humidity", humidity, hostname="test.mosquitto.org")
+			#publish.single("SmartCities/Temperature", temp, hostname="test.mosquitto.org")
+			#publish.single("SmartCities/Humidity", humidity, hostname="test.mosquitto.org")
 	else:
 		print("nan values")
 		#publish.single("SmartCities/Humidity", humidity, hostname="test.mosquitto.org")
@@ -85,14 +85,14 @@ def LightIntensityCalc_job():
 		lux = -1
 	print("Light Intensity is", resistance)
 	print("Is the light above threshold =",lux)
-	publish.single("SmartCities/LightIntensity", resistance, hostname="test.mosquitto.org")
+	#publish.single("SmartCities/LightIntensity", resistance, hostname="test.mosquitto.org")
 
 def MotionDetection_job():
-	publish.single("SmartCities/MotionDetected", motion, hostname="test.mosquitto.org")
-
+	#publish.single("SmartCities/MotionDetected", motion, hostname="test.mosquitto.org")
+	print (1)
 def PeopleCount_job():
-	publish.single("SmartCities/peoplecount", peoplecount, hostname="test.mosquitto.org")
-
+	#publish.single("SmartCities/peoplecount", peoplecount, hostname="test.mosquitto.org")
+	print(2)
 
 
 #schedule.every(1).minute.at(":05").do(TempHum_job)
