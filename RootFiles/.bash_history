@@ -1658,3 +1658,226 @@ cd
 cd SmartCities/InputDrivers/
 python3 Combined.py 
 exit
+sudo shutdown -h now
+cd SmartCities/InputDrivers/
+ls
+python3 Combined.py 
+pkill -9 python3
+pkill -9 python
+cd
+ls
+cd ..
+ls
+cd ..
+ls
+cd etc
+ls
+cd mosquitto/
+ls
+nano mosquitto.conf 
+ls
+cd ..
+ls
+cd mosquitto/
+ls
+nano mosquitto.conf 
+cd
+ls
+cd .. ..
+ls
+cd ..
+ls
+cd ..
+ls
+cd usr
+ls
+cd doc
+cd share
+ls
+cd doc
+ls
+cd mosquitto
+ls
+cd examples/
+ls
+nano mosquitto.conf.gz 
+exit
+cd SmartCities/OutputDrivers/
+ls
+python3 ActuatorControl.py 
+sudo nano ActuatorControl.py 
+python3 ActuatorControl.py 
+n
+cd cd test
+cd
+cd test
+ls
+python3 test_Subscribe.py 
+pkill -9 python
+pkill -9 python3
+exit
+cd test
+ls
+python3 
+python3 test_Subscribe.py
+sudo nano test_Subscribe.py 
+python3 test_Subscribe.py
+cd
+ls
+cd paho.mqtt.python/
+ls
+cd examples/
+ls
+cd
+pip install paho-client
+pip3 install paho-client
+pip3 install paho-mqtt
+cd test
+python3 test_Subscribe.py
+reboot
+sudo reboot
+cd test
+ls
+sudo nano test_Subscribe.py
+python3 test_Subscribe.py
+i2c detect -y 1
+i2c detect 
+i2c detect --help
+i2c detect -y 1
+cd
+i2c detect -y 1
+i2c
+i2c --help
+sudo i2c detect -y 1
+sudo i2cdetect -y 1
+pkill -9 python
+pkill -9
+sudo pkill -9
+sudo pkill -9 python3
+sudo i2cdetect -y 1
+sudo i2c detect -y 1
+cd test
+python3 test_Subscribe.py
+sudo i2cdetect -y 1
+sudo shutdown -h now
+cd DI
+cd GrovePi/Software/Python/
+ls
+python3 grove_ultrasonic.py 
+sudo nano grove_ultrasonic.py 
+python3 grove_ultrasonic.py 
+sudo nano grove_ultrasonic.py 
+python3 grove_ultrasonic.py
+sudo shutdown -h now
+cd SmartCities/OutputDrivers/
+ls
+sudo nano ActuatorControl.py 
+python3 ActuatorControl.py 
+pkill -9 python
+pkill -9 python3
+sudo nano ActuatorControl.py 
+sudo nano ActuatorControl.py
+sudo python3 ActuatorControl.py 
+sudo nano ActuatorControl.py
+python3 ActuatorControl.py 
+pip3 install schedule
+sudo python3 ActuatorControl.py 
+cd
+ls
+exit
+cd test
+ls
+sudo nano test_Publish.py 
+python3 test_Publish.py RedLedON
+python3 test_Publish.py RedLedOFF
+python3 test_Publish.py RedLedON
+python3 test_Publish.py circle1_on
+python3 test_Publish.py circle1_off
+python3 test_Publish.py RedLedOFF
+python3 test_Publish.py RedLedON
+sudo nano test_Publish.py 
+exit
+reboot
+sudo reboot
+exit
+ifconfig
+cd SmartCities/OutputDrivers/
+ls
+
+cd downward/
+ls
+nano sas_plan 
+exit
+pip install -e git+https://github.com/garydoranjr/pyddl.git#egg=pyddl
+ls
+cd src
+ls
+cd pyddl/
+ls
+python3 eight_puzzle_example.py 
+python3 missionaries_cannibals_example.py 
+cd
+sudo apt get install cmake g++ g++ multilib mercurial make python
+sudo apt-get install cmake g++ g++ multilib mercurial make python3
+sudo apt-get install cmake g++ g++ mercurial make python3
+hg clone http://hg.fast downward.org downward
+sudo hg clone http://hg.fast downward.org downward
+sudo hg clone -h
+sudo hg clone http://hg.fast-downward.org downward
+ls
+cd downward/
+ls
+python3 build.py 
+sudo python3 build.py 
+ls
+nano fast-downward.py 
+cd driver/
+ls
+nano main.py 
+nano tests.py 
+fast-downward.py --help
+python3 fast-downward.py --help
+cd ..
+python3 fast-downward.py --help
+sudo nano testproblem.pddl
+sudo nano testdomain.pddl
+sudo shutdown -h now
+cd downward/
+cd ..
+ls
+cd test
+ls
+cd ..
+cd downward/
+ls
+pwd
+cd
+cd test
+cp domain.pddl /home/pi/downward
+sudo cp domain.pddl /home/pi/downward
+sudo cp problem.pddl /home/pi/downward
+ls
+cd
+cd downward/
+ls
+nano domain.pddl 
+./fast-downward.py domain.pddl problem.pddl ---search "astart(blind())"
+sudo ./fast-downward.py domain.pddl problem.pddl ---search "astart(blind())"
+ls
+cd builds/
+ls
+cd release/
+ls
+cd bin/
+ls
+nano downward 
+ls
+cd translate/
+ls
+nano translate.py 
+cd .. ..
+cd ..
+sudo ./fast-downward.py domain.pddl problem.pddl --search "astart(blind())"
+sudo ./fast-downward.py domain.pddl problem.pddl --search "astar(blind())"
+ls
+nano sas_plan 
