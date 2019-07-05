@@ -1,0 +1,3 @@
+﻿(switchoff redl)
+(switchoff greenl)
+(switchoff bluel)
