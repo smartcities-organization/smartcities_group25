@@ -4,9 +4,13 @@ from tkinter import *
 import matplotlib.pyplot as plt
 import matplotlib
 import datetime
+import grovepi
 
 conn = sqlite3.connect('Database_sensor.db')
 Lt= conn.cursor()
+
+buzzer = 8
+grovepi.pinMode(buzzer,"OUTPUT")
 
 def plot(*args):
     if selectedPlot.get() == 'Temperature_Plot':
@@ -42,6 +46,9 @@ def plot(*args):
     plt.show()
 
 
+def BuzzerOff():
+    grovepi.digitalWrite(buzzer,0)
+    print('Stop Buzzer')
 
 mainwindow = Tk()
 mainwindow.configure(background = 'white')
@@ -56,6 +63,9 @@ PlotMenu.pack()
 
 button = Button(mainwindow, text="plot", command=plot)
 button.pack()
+
+button_buz = Button(mainwindow, text="Turn off Buzzer", command=BuzzerOff)
+button_bu.pack()
 mainwindow.mainloop()
 
 
