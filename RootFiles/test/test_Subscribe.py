@@ -27,18 +27,13 @@ def on_message(client, userdata, msg):
         print("Received message #2, do something else")
         # Do something else 
 # Create an MQTT client and attach our routines to it.
-print (1)
 client = mqtt.Client()
-print (2)
 client.on_connect = on_connect
-print (3)
 client.on_message = on_message
-print(4)
 #client.connect("test.mosquitto.org", 1883, 60)
 client.connect("iot.eclipse.org", 1883, 60)
-print (5)
 client.subscribe("SmartCities/#")
-print(6)
+client.subscribe("Database/#")
 # Process network traffic and dispatch callbacks. This will also handle
 # reconnecting. Check the documentation at
 # https://github.com/eclipse/paho.mqtt.python
