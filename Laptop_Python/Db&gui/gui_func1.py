@@ -1,16 +1,17 @@
+#GUI
+
 import time
 import sqlite3
 from tkinter import *
 import matplotlib.pyplot as plt
 import matplotlib
 import datetime
-import grovepi
+import paho.mqtt.publish as publish
+
 
 conn = sqlite3.connect('Database_sensor.db')
 Lt= conn.cursor()
 
-buzzer = 8
-grovepi.pinMode(buzzer,"OUTPUT")
 
 def plot(*args):
     if selectedPlot.get() == 'Temperature_Plot':
@@ -47,8 +48,8 @@ def plot(*args):
 
 
 def BuzzerOff():
-    grovepi.digitalWrite(buzzer,0)
-    print('Stop Buzzer')
+    publish.single("SmartCities/Buzzer", "0", hostname="iot.eclipse.org")
+    print("Turn off Buzzer")
 
 mainwindow = Tk()
 mainwindow.configure(background = 'white')
