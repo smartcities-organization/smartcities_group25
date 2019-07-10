@@ -15,7 +15,7 @@ BlueLed =7
 GreenLed =6
 buzzer = 2
 
-myhostname = "iot.eclipse.org"
+myhostname = "raspberrypig25"
 #myhostname = "test.mosquitto.org"
 
 
@@ -111,9 +111,9 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.connect(myhostname,1883,60)
 client.subscribe("SmartCities/#")
-#client.loop_start()
-client.loop_forever()
-#while True:
-#    print("wating for the message")
-#    time.sleep(1)
-#    pass
+client.loop_start()
+#client.loop_forever()
+while True:
+    print("wating for the message")
+    time.sleep(1)
+    pass

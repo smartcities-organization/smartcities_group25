@@ -41,7 +41,11 @@ OUTcurrentstate = False
 OUTpreviousstate = False
 peoplecount = -1
 
-myhostname = "iot.eclipse.org"
+openingTime = "08:00"
+closingTime = "22:00"
+Library_Status = "Close"
+
+myhostname = "raspberrypig25"
 
 grovepi.pinMode(lightsens_pin,"INPUT")
 grovepi.pinMode(pir_sensor_pin, "INPUT")
@@ -138,6 +142,13 @@ def weather_job():
 	#print("Current temperature : ", current_temp)
 	publish.single("SmartCities/WeatherForecast", weather_temp, hostname=myhostname)
 
+def OpenLibrary_job():
+	Library_Status = "Open"
+	publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname)
+
+def CloseLibrary_job():
+	Library_Status = "Close"
+	publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname) 
 
 schedule.every(1).minute.at(":10").do(TempHum_job)
 #schedule.every(1).minute.at(":10").do(LightIntensityCalc_job)
@@ -145,7 +156,7 @@ schedule.every(1).minute.at(":10").do(TempHum_job)
 #schedule.every(1).minute.at(":15").do(PeopleCount_job)
 #schedule.every(1).minute.at(":20").do(MotionDetection_job)
 
-#schedule.every(5).seconds.do(MotionDetection_job)
+schedule.every(5).seconds.do(MotionDetection_job)
 #schedule.every(5).seconds.do(PeopleCount_job)
 #schedule.every(5).seconds.do(TempHum_job)
 schedule.every(5).seconds.do(LightIntensityCalc_job)
