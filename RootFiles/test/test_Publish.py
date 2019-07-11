@@ -4,13 +4,13 @@
 import paho.mqtt.publish as publish
 import sys
 
-
-publish.single("SmartCities/test",sys.argv[1], hostname="iot.eclipse.org")
+myhostname = "raspberrypig25"
+publish.single("SmartCities/test",sys.argv[1], hostname=myhostname)
 #publish.single("SmartCities/topic", "World!", hostname="test.mosquitto.org")
 
 #print(sys.argv)
 #print(sys.argv[0])
-print(sys.argv[1])
+#print(sys.argv[1])
 
 
 print("Done")

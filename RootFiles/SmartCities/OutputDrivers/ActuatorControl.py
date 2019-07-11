@@ -7,6 +7,9 @@ import schedule
 from plugwise.api import*
 from datetime import datetime
 import paho.mqtt.client as mqtt
+import os
+
+os.system("clear")
 
 
 ##
@@ -15,7 +18,7 @@ BlueLed =7
 GreenLed =6
 buzzer = 2
 
-myhostname = "iot.eclipse.org"
+myhostname = "raspberrypig25"
 #myhostname = "test.mosquitto.org"
 
 
@@ -34,6 +37,9 @@ circle2 = Circle (mac2, stick)
 
 circle1.switch_off()
 circle2.switch_off()
+digitalWrite(RedLed,0)
+digitalWrite(BlueLed,0)
+digitalWrite(GreenLed,0)
 time.sleep(2)
 
 
@@ -47,22 +53,22 @@ def on_message(client, userdata, msg):
     if msg.payload == "circle1_on":
         print("Switching ON Circle 1")
         circle1.switch_on ()
-        publish.single("Database/Circle1", "1", hostname=myhostname)
+        publish.single("Database/Heater", "1", hostname=myhostname)
 
     elif msg.payload == "circle1_off":
     	print("Switching OFF Circle 1")
     	circle1.switch_off ()
-    	publish.single("Database/Circle1", "0", hostname=myhostname)
+    	publish.single("Database/Heater", "0", hostname=myhostname)
 
     elif msg.payload == "circle2_on":
         print("Switching ON Circle 2")
         circle2.switch_on ()
-        publish.single("Database/Circle2", "1", hostname=myhostname)
+        publish.single("Database/Cooler", "1", hostname=myhostname)
 
     elif msg.payload == "circle2_off":
     	print("Switching OFF Circle 2")
     	circle2.switch_off ()
-    	publish.single("Database/Circle2", "0", hostname=myhostname)
+    	publish.single("Database/Cooler", "0", hostname=myhostname)
 
     elif msg.payload == "RedLedON":
         print("Red Led ON")
@@ -113,7 +119,7 @@ client.connect(myhostname,1883,60)
 client.subscribe("SmartCities/#")
 #client.loop_start()
 client.loop_forever()
-#while True:
-#    print("wating for the message")
-#    time.sleep(1)
-#    pass
+# while True:
+#     print("wating for the message")
+#     time.sleep(1)
+#     pass
