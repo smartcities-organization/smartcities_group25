@@ -6,6 +6,8 @@ import schedule
 import os
 from datetime import datetime
 
+os.system("clear")
+
 myhostname = "raspberrypig25"
 
 peopleIN =0
@@ -15,6 +17,10 @@ SensorTemp = 24.0
 LightIntensity = "LOW"
 IsMotionDetected = 0
 ForecastTemp1H =24.0
+TempUpdated = False
+ForecastUpdated = False
+TargetTemp = 23
+
 
 prev_peopleIN =0
 prev_peopleOUT =0
@@ -44,6 +50,39 @@ if int(time.hour) >= 8 and int(time.hour) <= 22:
 	Library_Status = "Open"
 else:
 	Library_Status = "Close"
+
+def LineDecode(sline):
+	a = sline.split()
+	if a[0] == "(switchon":
+		if a[1] == "redl)":
+			#print ("red led ON")
+			publish.single("SmartCities/LedControl", "RedLedON", hostname=myhostname) 
+		elif a[1] == "greenl)":
+			#print ("green led ON")
+			publish.single("SmartCities/LedControl", "GreenLedON", hostname=myhostname) 
+		elif a[1] == "bluel)":
+			#print("blue led ON")
+			publish.single("SmartCities/LedControl", "BlueLedON", hostname=myhostname) 
+	elif a[0] == "(switchoff":
+		if a[1] == "redl)":
+			#print ("red led OFF")
+			publish.single("SmartCities/LedControl", "RedLedOFF", hostname=myhostname) 
+		elif a[1] == "greenl)":
+			#print ("green led OFF")
+			publish.single("SmartCities/LedControl", "GreenLedOFF", hostname=myhostname) 
+		elif a[1] == "bluel)":
+			#print("blue led OFF")
+			publish.single("SmartCities/LedControl", "BlueLedOFF", hostname=myhostname) 
+	elif a[0] == "(heateron":
+		print("heater ON")
+	elif a[0] == "(heateroff":
+		print ("heater OFF")
+	elif a[0] == "(cooleron":
+		print("cooler ON")
+	elif a[0] == "(cooleroff":
+		print ("cooler OFF")
+
+
 
 def changeCheck():
 	print ("changeCheck called")
@@ -124,7 +163,9 @@ def on_message(client, userdata, msg):
 
     elif msg.topic == "SmartCities/Temperature":
     	global SensorTemp
-    	SensorTemp = float(msg.payload)
+    	global TempUpdated
+    	SensorTemp = round(float(msg.payload))
+    	TempUpdated =True
     	#print(SensorTemp)
 
     elif msg.topic == "SmartCities/LightIntensity":
@@ -139,16 +180,20 @@ def on_message(client, userdata, msg):
 
     elif msg.topic == "SmartCities/WeatherForecast":
     	global ForecastTemp1H
-    	ForecastTemp1H = float(msg.payload)
+    	global ForecastUpdated
+    	ForecastTemp1H = round(float(msg.payload))
+    	ForecastUpdated =True
     	#print(ForecastTemp1H)
     chgCheck = True
 
 
 def OpenLibrary_job():
+	global Library_Status
 	Library_Status = "Open"
 	publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname)
 
 def CloseLibrary_job():
+	global Library_Status
 	Library_Status = "Close"
 	publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname) 
 
@@ -173,29 +218,44 @@ while True:
 		if calcflag is True:
 			print("in Loop")
 			#print("calc 555555555555555555555555555555555555555555=" + str(calcflag))
-			if LightIntensity == "DARK":
-				if 
-				publish.single("SmartCities/LedControl", "RedLedON", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "BlueLedON", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "GreenLedON", hostname=myhostname) 
-			elif LightIntensity == "LOW":
-				publish.single("SmartCities/LedControl", "RedLedON", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "BlueLedON", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "GreenLedOFF", hostname=myhostname)
-			elif LightIntensity == "MEDIUM":
-				publish.single("SmartCities/LedControl", "RedLedON", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "BlueLedOFF", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "GreenLedOFF", hostname=myhostname)
-			elif LightIntensity == "HIGH":
-				publish.single("SmartCities/LedControl", "RedLedOFF", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "BlueLedOFF", hostname=myhostname) 
-				publish.single("SmartCities/LedControl", "GreenLedOFF", hostname=myhostname)
 
-			#os.system("/home/pi/downward/fast-downward.py domain.pddl problem.pddl")
-			#os.system("sudo /home/pi/downward/fast-downward.py domain.pddl problem.pddl --search \"astar(blind())\"")
+			if peoplecount > 0 and Library_Status == "Open":
+				if LightIntensity == "DARK":
+					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllLedOn.pddl --search \"astar(blind())\"")
+				elif LightIntensity == "LOW":
+					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/RLedOn.pddl --search \"astar(blind())\"")
+				elif LightIntensity == "MEDIUM":
+					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/RGLedOn.pddl --search \"astar(blind())\"")
+				elif LightIntensity == "HIGH":
+					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllLedOff.pddl --search \"astar(blind())\"")
+			else:
+				a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllLedOff.pddl --search \"astar(blind())\"")
+			#os.system("clear")
+			f = open("sas_plan")
+			line = f.readline()
+			while line.split()[0] != ";":  # this is done to ignore the last line in the plan file
+				LineDecode(sline=line)
+				line = f.readline()
+			f.close()
 
-			
+			##############################################################################
+			# Temperature Control Code
+			TempUpdated = False
+			ForecastUpdated = False
+			if ForecastUpdated == True and TempUpdated == True:
+				if ForecastTemp1H < SensorTemp:
+					Heat = True
+				elif ForecastTemp1H > SensorTemp:
+					Cool = True
+				else:
+					Heat = False
+					Cool = False
 
+				if SensorTemp > TargetTemp:
+					pass
+				elif SensorTemp < TargetTemp
+
+			##############################################################################
 
 			#333333333333333333333333333333333333333333333333333333333333
 			calcflag = False

@@ -10,6 +10,8 @@ import schedule
 from grove_rgb_lcd import *
 import requests
 import urllib.request, json
+from datetime import datetime
+
 
 setText("Welcome To \nSmart Library")
 setRGB(0,128,64)
@@ -44,6 +46,13 @@ peoplecount = -1
 openingTime = "08:00"
 closingTime = "22:00"
 Library_Status = "Close"
+
+## remember it is one hour delayed in R Pi internal clock
+Ctime = datetime.now()   
+if int(Ctime.hour) >= 8 and int(Ctime.hour) <= 22:
+	Library_Status = "Open"
+else:
+	Library_Status = "Close"
 
 myhostname = "raspberrypig25"
 
@@ -84,9 +93,10 @@ def CalcPeopleCount():
 
 	if OUTcurrentstate != OUTpreviousstate:
 		if OUTcurrentstate == True:
-			OUTpeoplecount=OUTpeoplecount+1
-			publish.single("SmartCities/OUTpeoplecount", OUTpeoplecount, hostname=myhostname)
-			print("people count updated and published")
+			if OUTpeoplecount <= INpeoplecount:  # to avoid negative values of the people count
+				OUTpeoplecount=OUTpeoplecount+1
+				publish.single("SmartCities/OUTpeoplecount", OUTpeoplecount, hostname=myhostname)
+				print("people count updated and published")
 		OUTpreviousstate = OUTcurrentstate
 	
 	tpeoplecount = INpeoplecount - OUTpeoplecount
@@ -144,34 +154,59 @@ def weather_job():
 
 def OpenLibrary_job():
 	Library_Status = "Open"
-	publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname)
+
+	#publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname)
 
 def CloseLibrary_job():
-	Library_Status = "Close"
-	publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname) 
+	global Library_Status
+	global INpreviousstate
+	global INcurrentstate
+	global INpeoplecount
+	global OUTpreviousstate
+	global OUTcurrentstate
+	global OUTpeoplecount
+	global peoplecount
 
-schedule.every(1).minute.at(":10").do(TempHum_job)
+	INpreviousstate = False
+	INcurrentstate = False
+	INpeoplecount = 0
+	OUTpreviousstate = False
+	OUTcurrentstate = False
+	OUTpeoplecount = 0
+	peoplecount = 0
+	
+	publish.single("SmartCities/INpeoplecount", INpeoplecount, hostname=myhostname)
+	publish.single("SmartCities/OUTpeoplecount", OUTpeoplecount, hostname=myhostname)
+	publish.single("SmartCities/peoplecount", peoplecount, hostname=myhostname)
+
+	Library_Status = "Close"
+	#publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname) 
+
+
 #schedule.every(1).minute.at(":10").do(LightIntensityCalc_job)
 #schedule.every(1).minute.at(":40").do(LightIntensityCalc_job)
 #schedule.every(1).minute.at(":15").do(PeopleCount_job)
 #schedule.every(1).minute.at(":20").do(MotionDetection_job)
-
-schedule.every(5).seconds.do(MotionDetection_job)
 #schedule.every(5).seconds.do(PeopleCount_job)
 #schedule.every(5).seconds.do(TempHum_job)
+schedule.every(1).minute.at(":10").do(TempHum_job)
+schedule.every(5).seconds.do(MotionDetection_job)
 schedule.every(5).seconds.do(LightIntensityCalc_job)
 schedule.every(6).seconds.do(weather_job)
 
 while True:
 	try:
-		#PIR Check
-		motion=grovepi.digitalRead(pir_sensor_pin)
-		#CalcMotionDetection()
-		
-		# Read distance value from Ultrasonic and calculate people count 
-		distance = grovepi.ultrasonicRead(ultrasonic_ranger)
-		#print(distance)
-		CalcPeopleCount()
+		if Library_Status == "Open":
+			# Read distance value from Ultrasonic and calculate people count 
+			distance = grovepi.ultrasonicRead(ultrasonic_ranger)
+			#print(distance)
+			CalcPeopleCount()
+			motion = 0
+			pass
+		else:
+			#PIR Check
+			motion=grovepi.digitalRead(pir_sensor_pin)
+			#CalcMotionDetection()
 
 		schedule.run_pending()
 		time.sleep(.1)

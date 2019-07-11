@@ -1,0 +1,4 @@
+(switchoff redl)
+(switchoff greenl)
+(switchoff bluel)
+; cost = 3 (unit cost)
