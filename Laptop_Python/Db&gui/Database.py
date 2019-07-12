@@ -1,4 +1,4 @@
-#database 
+#Database file
 
 import time
 import sqlite3
@@ -14,12 +14,12 @@ light_sensor = 0
 sensor_value = ''
 topic_value = ''
 
-#database
+#create database
 conn = sqlite3.connect('Database_SmartLib_Group25.db')
 print('database created')
-Lt= conn.cursor()
+Lt= conn.cursor() # a cursor for the database
 
-Lt.execute('CREATE TABLE IF NOT EXISTS Data(Datestmp TEXT,Topic TEXT,Sensor_Data TEXT )')
+Lt.execute('CREATE TABLE IF NOT EXISTS Data(Datestmp TEXT,Topic TEXT,Sensor_Data TEXT )') # creating a table
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
@@ -35,8 +35,10 @@ def on_message(client, userdata, msg):
     topic_value = msg.topic
     #.decode('utf-8')
 
-    unix = int( time.time())
-    date = str(datetime.datetime.fromtimestamp(unix).strftime('%Y-%m-%d %H:%M:%S'))
+    unix = int( time.time()) #exract the current time when the data is received via mqtt
+    date = str(datetime.datetime.fromtimestamp(unix).strftime('%Y-%m-%d %H:%M:%S')) #write down in the format of year, month, day gours, minute, second
+    
+    #Obtain the existing data for every topic to prevent overwriting the data into the database
     if topic_value== 'SmartCities/INpeoplecount':
         Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/INpeoplecount' ORDER BY Datestmp DESC LIMIT 1")
         result = Lt.fetchone()
@@ -85,11 +87,12 @@ def on_message(client, userdata, msg):
     else:
         result = None
 
+    # Database is empty
     if result is None:
         Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
-    else:
+    else: # compare the current sensor value and the value already stored in database
         if( sensor_value != result[2]):
-            print('inside',sensor_value)
+            print('inside',sensor_value)#insert data
             Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
         else:
             print("repeated data")

@@ -1,4 +1,4 @@
-#GUI
+#GUI For Smart Library
 
 import time
 import sqlite3
@@ -9,7 +9,7 @@ import datetime
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 
-
+#global variables for gui
 Data_tempC = 0
 Data_tempD=0
 In_people=0
@@ -23,19 +23,11 @@ H_on=0
 C_on=0
 lib_status=0
 
+#open the database
 conn = sqlite3.connect('Database_SmartLib_Group25.db')
 Lt= conn.cursor()
 
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
-    
-# The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    Data_tempC =msg.payload.decode('utf-8')
-
-
-
-
+# function call when plotting is requested. Depending on the request, retrieve the data for the particular topic
 def plot(*args):
     if selectedPlot.get() == 'Temperature':
         Lt.execute("SELECT * FROM Data WHERE Topic = 'SmartCities/Temperature'")
@@ -67,6 +59,7 @@ def plot(*args):
     time_plot= []
     sensor_plot=[]
 
+    #fill the array with the date as x axis and data as y axis. PLot it
     for row in Lt.fetchall():
         converted_dates = matplotlib.dates.datestr2num(row[0])
         time_plot.append(converted_dates)
@@ -79,11 +72,12 @@ def plot(*args):
     plt.legend(loc ='upper left')
     plt.show()
 
-
+#Turn off the buzzer when the buzzer override button is clicked
 def BuzzerOff():
     publish.single("SmartCities/Buzzer", "0", hostname="iot.eclipse.org")
     print("Turn off Buzzer")
 
+#updating real time data on the interface
 def read_database():
     global Data_tempC 
     global Data_tempD
@@ -101,7 +95,7 @@ def read_database():
 
     
     result =0
-
+    #obtain data from the database for evey label in the gui and display
     Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/peoplecount' ORDER BY Datestmp DESC LIMIT 1")
     result = Lt.fetchone()
     People_count = result[2]
@@ -210,14 +204,11 @@ def read_database():
         chkOpen.configure(var= chkOpen_state)
         chkClose.configure(var = chkClose_state)
 
-
+    #repeat this function every 2s
     top.after(2000,read_database)
 
 
-    
-
-
-
+#creating a Tkinter GUI and creating labels, checkboxes, optionmenu and buttons
 top= Tk()
 top.geometry()
 top.configure(background='gray10')
@@ -310,6 +301,7 @@ labelframe7.grid(row=4,column=0,sticky=N+E+W+S,padx=5)
 button3=Button(labelframe7, text="Buzzer Override", command=BuzzerOff,bg='gray10',fg='azure',font =("Calibri(body)", 16))
 button3.grid(sticky=W,row=11,column=0)
 
+#placing the widgets in required locations
 label1.grid(row=0,column=0)
 label3.grid(row=0, column=1)
 label2.grid(row=1,column =0)
