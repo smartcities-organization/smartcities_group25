@@ -6,9 +6,12 @@ from tkinter import *
 import matplotlib.pyplot as plt
 import matplotlib
 import datetime
-import paho.mqtt.publish as publish
-import paho.mqtt.client as mqtt
 
+
+import paho.mqtt.publish as publish
+
+
+myhost ="192.168.0.104"
 #global variables for gui
 Data_tempC = 0
 Data_tempD=0
@@ -24,7 +27,7 @@ C_on=0
 lib_status=0
 
 #open the database
-conn = sqlite3.connect('Database_SmartLib_Group25.db')
+conn = sqlite3.connect('Test2_Group25.db')
 Lt= conn.cursor()
 
 # function call when plotting is requested. Depending on the request, retrieve the data for the particular topic
@@ -33,10 +36,10 @@ def plot(*args):
         Lt.execute("SELECT * FROM Data WHERE Topic = 'SmartCities/Temperature'")
         plt.figure()
     elif selectedPlot.get() == 'Heater':
-        Lt.execute("SELECT * FROM Data WHERE Topic = 'SmartCities/Humidity' ")
+        Lt.execute("SELECT * FROM Data WHERE Topic = 'Database/Heater' ")
         plt.figure()
     elif selectedPlot.get() == 'Cooler':
-        Lt.execute("SELECT * FROM Data WHERE Topic = 'SmartCities/Motion' ")
+        Lt.execute("SELECT * FROM Data WHERE Topic = 'Database/Cooler' ")
         plt.figure()
     elif selectedPlot.get() == 'PeopleCount':
         Lt.execute("SELECT * FROM Data WHERE Topic = 'SmartCities/peoplecount' ")
@@ -54,8 +57,8 @@ def plot(*args):
         Lt.execute("SELECT * FROM Data WHERE Topic = 'Database/GreenLed' ")
         plt.figure()
 
-
-    #WHERE topic = temperature
+    
+    
     time_plot= []
     sensor_plot=[]
 
@@ -63,7 +66,8 @@ def plot(*args):
     for row in Lt.fetchall():
         converted_dates = matplotlib.dates.datestr2num(row[0])
         time_plot.append(converted_dates)
-        sensor_plot.append(row[2])              
+        sensor_plot.append(row[2]) 
+
     plt.xlabel('time')
     plt.ylabel('sensor_data')
     plt.title(selectedPlot.get())
@@ -74,8 +78,7 @@ def plot(*args):
 
 #Turn off the buzzer when the buzzer override button is clicked
 def BuzzerOff():
-    publish.single("SmartCities/Buzzer", "0", hostname="iot.eclipse.org")
-    print("Turn off Buzzer")
+    publish.single("BuzzerControl/Buzzer", "BuzzerOff", hostname= myhost)
 
 #updating real time data on the interface
 def read_database():
@@ -93,7 +96,6 @@ def read_database():
     global lib_open
     global lib_close
 
-    
     result =0
     #obtain data from the database for evey label in the gui and display
     Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/peoplecount' ORDER BY Datestmp DESC LIMIT 1")
@@ -214,14 +216,14 @@ top.geometry()
 top.configure(background='gray10')
 top.title('SMART LIBRARY, Group 25')
 
-labelframe1 = LabelFrame(top, text="Temperature",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
+labelframe1 = LabelFrame(top, text="Temperature (deg C)",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
 labelframe1.grid(row=0,column=0,sticky=N+E+W+S)   
 
 labelframe2 = LabelFrame(top, text="Heater & Cooler",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
 labelframe2.grid(row=0,column=1,sticky=N+E+W+S) 
 
 label1=Label(labelframe1,text="Current Temperature:",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
-label2=Label(labelframe1,text="Default Temperature:",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+label2=Label(labelframe1,text="Target Temperature:",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
 label3=Label(labelframe1,text=Data_tempC,bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
 label4=Label(labelframe1,text= Data_tempD,bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
 
@@ -248,8 +250,8 @@ chkClose_state.set(False) #set check state
 chkClose = Checkbutton(labelframe3, text='Close', var= chkClose_state,font =("Calibri(body)", 16),bg='gray10',fg='azure',selectcolor='black')
 
 label8=Label(labelframe3,text= 'People Count:',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
-label9=Label(labelframe3,text= "Entering:",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
-label10=Label(labelframe3,text="Exiting :",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+label9=Label(labelframe3,text= "Entered:",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+label10=Label(labelframe3,text="Exited :",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
 label11=Label(labelframe3,text="Inside  :",bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
 
 label12=Label(labelframe3,text= In_people,bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
@@ -294,6 +296,12 @@ button2 = Button(labelframe6, text="Plot", command=plot,bg='gray10',fg='azure',f
 
 PlotMenu.grid(row=12,column=0)
 button2.grid(sticky=E,row=12,column=2,pady=10,padx=5)
+
+#lbl= Label(labelframe6,text='Date to Display:',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+#lbl.grid(row=13, column=0, sticky =W)
+
+#e1= Entry(labelframe6)
+#e1.grid( row = 13,column = 2, sticky=W)
 
 labelframe7 = LabelFrame(top,text='ACTUATOR',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
 labelframe7.grid(row=4,column=0,sticky=N+E+W+S,padx=5)

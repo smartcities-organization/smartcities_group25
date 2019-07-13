@@ -8,14 +8,14 @@ import matplotlib
 import paho.mqtt.client as mqtt
 import datetime
 
-myhost = "raspberrypig25"
+myhost = "192.168.0.104"
 
 light_sensor = 0
 sensor_value = ''
 topic_value = ''
 
 #create database
-conn = sqlite3.connect('Database_SmartLib_Group25.db')
+conn = sqlite3.connect('Test3_Group25.db')
 print('database created')
 Lt= conn.cursor() # a cursor for the database
 
@@ -92,7 +92,6 @@ def on_message(client, userdata, msg):
         Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
     else: # compare the current sensor value and the value already stored in database
         if( sensor_value != result[2]):
-            print('inside',sensor_value)#insert data
             Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
         else:
             print("repeated data")
@@ -105,7 +104,7 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect("iot.eclipse.org", 1883, 60)
+client.connect(myhost, 1883, 60)
 client.subscribe("SmartCities/#")
 client.subscribe("Database/#")
 client.loop_forever()
