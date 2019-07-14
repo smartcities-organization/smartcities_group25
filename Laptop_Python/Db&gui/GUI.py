@@ -11,7 +11,7 @@ import datetime
 import paho.mqtt.publish as publish
 
 
-myhost ="192.168.0.104"
+myhost ="raspberrypig25"
 #global variables for gui
 Data_tempC = 0
 Data_tempD=0
@@ -83,7 +83,7 @@ def plot(*args):
 
 #Turn off the buzzer when the buzzer override button is clicked
 def BuzzerOff():
-    publish.single("BuzzerControl/Buzzer", "BuzzerOff", hostname= iot.eclipse.org)
+    publish.single("BuzzerControl/Buzzer", "BuzzerOff", hostname= myhost)
 
 #updating real time data on the interface
 def read_database():
