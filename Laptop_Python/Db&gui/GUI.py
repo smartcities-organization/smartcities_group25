@@ -85,6 +85,10 @@ def plot(*args):
 def BuzzerOff():
     publish.single("BuzzerControl/Buzzer", "BuzzerOff", hostname= myhost)
 
+
+def Reset_func():
+    publish.single("Reset", " ", hostname= myhost)
+
 #updating real time data on the interface
 def read_database():
     global Data_tempC 
@@ -237,7 +241,7 @@ def read_database():
         chkDh.configure(var = chkDh_state)
 
     #repeat this function every 2s
-    top.after(2000,read_database)
+    top.after(1000,read_database)
 
 
 #creating a Tkinter GUI and creating labels, checkboxes, optionmenu and buttons
@@ -310,6 +314,8 @@ labelframe8 = LabelFrame(top,bg='gray10',fg='azure',font =("Calibri(body) bold",
 labelframe8.grid(row=4,column=1,sticky =E,padx=5,pady=5)
 
 btn2= Button(labelframe8, text="EXIT",bg='gray10',fg='azure',font =("Calibri(body) bold", 18), command=top.destroy)
+btn3= Button(labelframe8, text="Reset",bg='gray10',fg='azure',font =("Calibri(body) bold", 18), command= Reset_func)
+btn3.grid(row = 4, column = 1,sticky = N+W)
 
 labelframe6 = LabelFrame(top,text='PLOT',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
 labelframe6.grid(row=3,column=0,padx=5,sticky=N+E+W+S)
@@ -379,7 +385,7 @@ chkH.grid(row=1,column=3)
 chkC.grid(row=2,column=3)
 chkOpen.grid(row=3,column=0,sticky=W)
 chkClose.grid(row=4,column=0,sticky = W)
-btn2.grid()
+btn2.grid(row= 4, column = 2, sticky = E)
 
 top.after(0, read_database)
 top.mainloop() 
