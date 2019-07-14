@@ -1,0 +1,13 @@
+(define (problem Hum_Control)
+   (:domain group25)
+   (:objects dhr TargetH CurrentH)
+   (:init 
+          (DeHum_fr dhr)
+          (Humidity TargetH)
+          (Humidity CurrentH)
+          (isGreater CurrentH TargetH)
+          (isOFF dhr)
+          )
+   (:goal (and(iSON dhr)
+              (not(isOFF dhr))))
+              )
