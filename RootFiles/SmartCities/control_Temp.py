@@ -137,10 +137,13 @@ def LineDecode(sline):
 		cooler_on = False
 		publish.single("Actuator/Cooler", "cool_off", hostname=myhostname)
 	elif a[0] == "(on_dehumidifier":
+		print("De-Humidifier ON")
 		publish.single("Database/Humidity_Control", "dehumidifier_on", hostname=myhostname)
 	elif a[0] == "(on_humidifier":
+		print("Humidifier ON")
 		publish.single("Database/Humidity_Control", "humidifier_on", hostname=myhostname)
 	elif a[0] == "(off_hum_dehum":
+		print("Both Humidifier and De-Humidifier OFF")
 		publish.single("Database/Humidity_Control", "both_off", hostname=myhostname)
 
 
@@ -408,7 +411,7 @@ while True:
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/hum_ON.pddl --search \"astar(blind())\"")
 				elif(SensorHum>50)
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/dehum_ON.pddl --search \"astar(blind())\"")
-				elif(SensorHum>30 and SensorHum<50)
+				elif(SensorHum>=30 and SensorHum<=50)
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllHum_off.pddl --search \"astar(blind())\"")
 				HumUpdated =False
 			calcflag = False
