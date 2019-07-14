@@ -13,9 +13,11 @@ avg1=0
 avg2=0
 avg3=0
 avg4=0
-time_of_day=datetime.now().hour
+time_of_day=datetime.now().hour +1 # for raspi delay
+
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
+
 def on_message(client, userdata, msg):
 	global current_temp
 
@@ -105,32 +107,8 @@ def weather():
 #schedule.every(1).minutes.do(weather)
 
 while True :
-		
-			weather()
-			if(people_count>0 and people_count <= 10):
-				if(led_on==1):
-					current_temp = current_temp + 0.55
-				elif(led_on==2):
-					current_temp = current_temp + 1.05
-#				print("Temperature has risen by .05 deg C")
-				elif(led_on==3):
-					current_temp = current_temp + 1.55
-			elif(people_count>10 and people_count <= 20):
-				if(led_on==1):
-					current_temp = current_temp + 0.60
-				elif(led_on==2):
-					current_temp = current_temp + 1.10
-				elif(led_on==3):
-					current_temp = current_temp + 1.60
-			elif(people_count>30 and people_count <= 40):
-				if(led_on==1):
-					current_temp = current_temp + 1.05
-				elif(led_on==2):
-					current_temp = current_temp + 1.55
-#				print("Temperature has risen by .05 deg C")
-				elif(led_on==3):
-					current_temp = current_temp + 2.05
-			time.sleep(60)
+	weather()
+	time.sleep(3)
 
 
 		#schedule.run_pending()
