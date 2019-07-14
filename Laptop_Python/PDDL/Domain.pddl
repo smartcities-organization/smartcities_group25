@@ -9,6 +9,10 @@
     (isGreater ?tc ?tt)
     (isLesser ?tc ?tt)
     (isEqual ?tc ?tt)
+	(Hum_fr ?hr)
+    (DeHum_fr ?dhr)
+    (Humidity ?t)
+	(inRange ?hc ?ht)
     )
 
    (:action switchOn
@@ -50,6 +54,23 @@
                          (isLesser ?CurTem ?Tartem) (not(isEqual ?CurTem ?Tartem)))
        :effect (and  (isOff ?app2)(not (isON ?app2))(not (isLesser ?CurTem ?Tartem))(isEqual ?CurTem ?Tartem))
        )
-         
+     
+	(:action ON_DeHumidifier
+       :parameters  (?dhr ?TarHum ?CurHum)
+       :precondition (and (Humidity ?TarHum) (Humidity ?CurHum )(isOFF ?dhr)(DeHum_fr ?dhr)
+                         (isGreater ?CurHum ?TarHum)(not(inRange ?CurHum ?TarHum)))
+       :effect (and  (isON ?dhr)(not (isOFF ?dhr))(not (isGreater ?CurHum ?TarHum))(inRange ?CurHum ?TarHum))
+       )   
+    (:action ON_Humidifier
+       :parameters  (?hr ?TarHum ?CurHum)
+       :precondition (and  (Hum_fr ?hr)(Humidity ?TarHum) (Humidity ?CurHum )(isOFF ?hr)(Hum_fr ?hr)
+                         (isLesser ?CurHum ?TarHum)(not(inRange ?CurHum ?TarHum)))
+       :effect (and  (isON ?hr)(not (isOFF ?hr))(not (isLesser ?CurHum ?TarHum))(inRange ?CurHum ?TarHum))
+       )
+     (:action OFF_Hum_DeHum
+       :parameters  (?dhr ?hr ?TarHum ?CurHum)
+       :precondition (and  (Hum_fr ?hr)(Humidity ?TarHum) (Humidity ?CurHum )(isON ?hr)(Hum_fr ?hr)(isON ?dhr)(DeHum_fr ?dhr)
+                         (inRange ?CurHum ?TarHum))
+       :effect (and  (isOFF ?hr)(isOFF ?dhr)))
    )
 
