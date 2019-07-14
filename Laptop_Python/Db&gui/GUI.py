@@ -25,6 +25,8 @@ blue_led = 0
 H_on=0
 C_on=0
 lib_status=0
+Data_humid =0
+Humid_status = 0
 
 #open the database
 conn = sqlite3.connect('Test2_Group25.db')
@@ -56,6 +58,9 @@ def plot(*args):
     elif selectedPlot.get() == 'GreenLed':
         Lt.execute("SELECT * FROM Data WHERE Topic = 'Database/GreenLed' ")
         plt.figure()
+    elif selectedPlot.get() == 'Humidity':
+        Lt.execute("SELECT * FROM Data WHERE Topic = 'SmartCities/Humidity' ")
+        plt.figure()
 
     
     
@@ -68,8 +73,8 @@ def plot(*args):
         time_plot.append(converted_dates)
         sensor_plot.append(row[2]) 
 
-    plt.xlabel('time')
-    plt.ylabel('sensor_data')
+    plt.xlabel('Date Stamp')
+    plt.ylabel('Data')
     plt.title(selectedPlot.get())
     plt.grid()
     plt.plot_date(time_plot,sensor_plot, '-',label= selectedPlot.get())
@@ -78,7 +83,7 @@ def plot(*args):
 
 #Turn off the buzzer when the buzzer override button is clicked
 def BuzzerOff():
-    publish.single("BuzzerControl/Buzzer", "BuzzerOff", hostname= myhost)
+    publish.single("BuzzerControl/Buzzer", "BuzzerOff", hostname= iot.eclipse.org)
 
 #updating real time data on the interface
 def read_database():
@@ -95,6 +100,7 @@ def read_database():
     global C_on
     global lib_open
     global lib_close
+    global Data_humid
 
     result =0
     #obtain data from the database for evey label in the gui and display
@@ -102,6 +108,11 @@ def read_database():
     result = Lt.fetchone()
     People_count = result[2]
     label14.configure(text=People_count)
+
+    Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/Humidity' ORDER BY Datestmp DESC LIMIT 1")
+    result = Lt.fetchone()
+    Data_humid = result[2]
+    label21.configure(text=Data_humid)
 
     result =0
 
@@ -206,6 +217,25 @@ def read_database():
         chkOpen.configure(var= chkOpen_state)
         chkClose.configure(var = chkClose_state)
 
+    Lt.execute("SELECT * FROM Data WHERE Topic ='Database/Humidity_Control' ORDER BY Datestmp DESC LIMIT 1")
+    result = Lt.fetchone()
+    Humid_status = result[2]
+    if Humid_status == 'humidifier_on':
+        chkHu_state.set(True)
+        chkDh_state.set(False)
+        chkHu.configure(var= chkHu_state)
+        chkDh.configure(var = chkDh_state)
+    elif Humid_status =='dehumidifier_on':
+        chkHu_state.set(False)
+        chkDh_state.set(True)
+        chkHu.configure(var= chkHu_state)
+        chkDh.configure(var = chkDh_state)
+    elif Humid_status == 'both_off':
+        chkHu_state.set(False)
+        chkDh_state.set(False)
+        chkHu.configure(var= chkHu_state)
+        chkDh.configure(var = chkDh_state)
+
     #repeat this function every 2s
     top.after(2000,read_database)
 
@@ -284,7 +314,7 @@ btn2= Button(labelframe8, text="EXIT",bg='gray10',fg='azure',font =("Calibri(bod
 labelframe6 = LabelFrame(top,text='PLOT',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
 labelframe6.grid(row=3,column=0,padx=5,sticky=N+E+W+S)
 
-PlotList=["Select","Temperature", "Cooler","Heater","PeopleCount","LightIntensity","RedLed","BlueLed","GreenLed"]
+PlotList=["Select","Temperature","Humidity", "Cooler","Heater","PeopleCount","LightIntensity","RedLed","BlueLed","GreenLed"]
 
 selectedPlot = StringVar(top)
 selectedPlot.set(PlotList[0])
@@ -297,17 +327,34 @@ button2 = Button(labelframe6, text="Plot", command=plot,bg='gray10',fg='azure',f
 PlotMenu.grid(row=12,column=0)
 button2.grid(sticky=E,row=12,column=2,pady=10,padx=5)
 
-#lbl= Label(labelframe6,text='Date to Display:',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
-#lbl.grid(row=13, column=0, sticky =W)
-
-#e1= Entry(labelframe6)
-#e1.grid( row = 13,column = 2, sticky=W)
-
 labelframe7 = LabelFrame(top,text='ACTUATOR',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
 labelframe7.grid(row=4,column=0,sticky=N+E+W+S,padx=5)
 
 button3=Button(labelframe7, text="Buzzer Override", command=BuzzerOff,bg='gray10',fg='azure',font =("Calibri(body)", 16))
 button3.grid(sticky=W,row=11,column=0)
+
+labelframe5 = LabelFrame(top,text='Humidity (%)',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))  
+labelframe5.grid(row=3,column=1,sticky=N+E+W+S,padx=5)
+
+chkHu_state = BooleanVar()
+chkHu_state.set(False) #set check state
+chkHu = Checkbutton(labelframe5, text='On', var= chkHu_state,bg='gray10',fg='azure',font =("Calibri(body)", 16),selectcolor='black')
+
+chkDh_state = BooleanVar()
+chkDh_state.set(False) #set check state
+chkDh = Checkbutton(labelframe5, text='On', var= chkDh_state,bg='gray10',fg='azure',font =("Calibri(body)", 16),selectcolor='black')
+
+label18 = Label(labelframe5,text= 'Humidity:',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+label19 = Label(labelframe5,text= 'Humidifier On/Off:',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+label20 = Label(labelframe5,text= 'Dehumidifier On/Off:',bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+label21 = Label(labelframe5,text= Data_humid,bg='gray10',fg='azure',font =("Calibri(body) bold", 16))
+
+chkHu.grid(row= 4, column = 2)
+chkDh.grid(row= 5,column=2)
+label18.grid(row= 3, column = 1,sticky= W)
+label19.grid(row= 4, column = 1,sticky= W)
+label20.grid(row= 5,column = 1,sticky= W)
+label21.grid(row= 3,column = 2,sticky= W)
 
 #placing the widgets in required locations
 label1.grid(row=0,column=0)

@@ -15,7 +15,7 @@ sensor_value = ''
 topic_value = ''
 
 #create database
-conn = sqlite3.connect('Test3_Group25.db')
+conn = sqlite3.connect('Test2_Group25.db')
 print('database created')
 Lt= conn.cursor() # a cursor for the database
 
@@ -84,6 +84,12 @@ def on_message(client, userdata, msg):
     elif topic_value== 'SmartCities/Library_Status':
         Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/Library_Status' ORDER BY Datestmp DESC LIMIT 1")
         result = Lt.fetchone()
+    elif topic_value== 'SmartCities/Humidity':
+        Lt.execute("SELECT * FROM Data WHERE Topic ='SmartCities/Library_Status' ORDER BY Datestmp DESC LIMIT 1")
+        result = Lt.fetchone()
+    elif topic_value== 'SmartCities/Humidity':
+        Lt.execute("SELECT * FROM Data WHERE Topic ='Database/Humidity_Control' ORDER BY Datestmp DESC LIMIT 1")
+        result = Lt.fetchone()
     else:
         result = None
 
@@ -104,7 +110,7 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-client.connect(myhost, 1883, 60)
+client.connect("iot.eclipse.org", 1883, 60)
 client.subscribe("SmartCities/#")
 client.subscribe("Database/#")
 client.loop_forever()
