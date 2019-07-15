@@ -1,6 +1,5 @@
-# people count publish file
-# MQTT Publish Demo
-# Publish two messages, to two different topics
+# This file take care of all the inputs required for the System
+# The raw input value is converted to contextual data and sent to other systems via MQTT 
 
 import paho.mqtt.publish as publish
 import grovepi
@@ -18,13 +17,6 @@ os.system("clear")
 setText("Welcome To \nSmart Library")
 setRGB(0,128,64)
 
-
-#publish.single("CoreElectronics/test", "Hello", hostname="test.mosquitto.org")
-#publish.single("CoreElectronics/topic", "World!", hostname="test.mosquitto.org")
-
-
-# Connect the Grove Ultrasonic Ranger to digital port D4
-# SIG,NC,VCC,GND
 ultrasonic_ranger = 3
 dht_sensor_pin = 4
 pir_sensor_pin = 8
@@ -45,15 +37,12 @@ OUTcurrentstate = False
 OUTpreviousstate = False
 peoplecount = -1
 
-#openingTime = "08:00"
-#closingTime = "22:00"
 openingTime = "08:00"
 closingTime = "22:00"
 TimeOpen = 8
 TimeClose = 22
 Library_Status = "Close"
 
-## remember it is one hour delayed in R Pi internal clock
 Ctime = datetime.now()   
 if int(Ctime.hour) >= TimeOpen and int(Ctime.hour) < TimeClose:
 	Library_Status = "Open"
@@ -66,14 +55,6 @@ myhostname = "raspberrypig25"
 
 grovepi.pinMode(lightsens_pin,"INPUT")
 grovepi.pinMode(pir_sensor_pin, "INPUT")
-
-def CalcMotionDetection():
-	if motion == 1:
-		print("Motion detected")
-	elif motion==0:
-		print("No motion detected")
-	else:
-		print("ERROR.PIR")
 
 def CalcPeopleCount():
 	global INpreviousstate
@@ -111,7 +92,6 @@ def CalcPeopleCount():
 	if tpeoplecount != peoplecount:
 		peoplecount = tpeoplecount
 		text = "IN =" + str(peoplecount) + "  OUT =" + str(OUTpeoplecount) + "\n Total = " + str(INpeoplecount)
-		#setText("IN = {}  OUT = {}\n Inside = {}".format(str(INpeoplecount)).format(str(OUTpeoplecount)).format(str(peoplecount)))
 		setText(text)
 		publish.single("SmartCities/peoplecount", peoplecount, hostname=myhostname)
 		print(text + "  published")
@@ -158,9 +138,6 @@ def LightIntensityCalc_job():
 		print("LightIntensity = " + LightLevel)
 
 
-# def MotionDetection_job():
-# 	publish.single("SmartCities/MotionDetected", motion, hostname=myhostname)
-	#print (1)
 def PeopleCount_job():
 	#publish.single("SmartCities/peoplecount", peoplecount, hostname=myhostname)
 	print(2)
@@ -215,18 +192,9 @@ def weather_job():
 	publish.single("SmartCities/WeatherForecast", avg, hostname=myhostname)
 
 
-
-
-	# weather_temp= data['data'][0]['temp']
-	# print("Weather forecast : ",weather_temp)
-	# #print("Current temperature : ", current_temp)
-	# publish.single("SmartCities/WeatherForecast", weather_temp, hostname=myhostname)
-
 def OpenLibrary_job():
 	global Library_Status
 	Library_Status = "Open"
-
-	#publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname)
 
 def CloseLibrary_job():
 	global Library_Status
@@ -249,10 +217,7 @@ def CloseLibrary_job():
 	publish.single("SmartCities/INpeoplecount", INpeoplecount, hostname=myhostname)
 	publish.single("SmartCities/OUTpeoplecount", OUTpeoplecount, hostname=myhostname)
 	publish.single("SmartCities/peoplecount", peoplecount, hostname=myhostname)
-
 	Library_Status = "Close"
-	#publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname) 
-
 
 #schedule.every(1).minute.at(":10").do(LightIntensityCalc_job)
 #schedule.every(1).minute.at(":40").do(LightIntensityCalc_job)
@@ -261,12 +226,14 @@ def CloseLibrary_job():
 #schedule.every(5).seconds.do(PeopleCount_job)
 #schedule.every(5).seconds.do(TempHum_job)
 #schedule.every(5).seconds.do(MotionDetection_job)
+#schedule.every(20).seconds.do(weather_job)
+#schedule.every(10).seconds.do(Temperature_job)
+#schedule.every(15).seconds.do(Humidity_job)
 
-#schedule.every(1).minute.at(":10").do(TempHum_job)
-schedule.every(5).seconds.do(LightIntensityCalc_job)
-schedule.every(10).seconds.do(Temperature_job)
-schedule.every(15).seconds.do(Humidity_job)
-schedule.every(20).seconds.do(weather_job)
+schedule.every(3).minute.at(":15").do(TempHum_job)
+schedule.every(5).minute.at(":25").do(Humidity_job)
+schedule.every(10).seconds.do(LightIntensityCalc_job)
+
 schedule.every().day.at("00:00").do(weather_job)
 schedule.every().day.at("06:00").do(weather_job)
 schedule.every().day.at("12:00").do(weather_job)
@@ -284,14 +251,14 @@ while True:
 			#print(distance)
 			CalcPeopleCount()
 			motion = 0
+			# PIR Sensor is not used during the Library Open hours
 			time.sleep(.1)
-		else:
+		else: # Library is closed 
 			#PIR Check
 			motion=grovepi.digitalRead(pir_sensor_pin)
 			publish.single("SmartCities/MotionDetected", motion, hostname=myhostname)
 			print("IsMotionDetected = " + str(motion))
-			time.sleep(5)
-			
+			time.sleep(5) # Check PIR every 5 seconds
 		schedule.run_pending()
 	except TypeError:
         	print ("Error")
@@ -299,8 +266,6 @@ while True:
         	print ("Error")
 	except (KeyboardInterrupt,SystemExit):
 			print("Stopping....")
-			#setText("Programm... \n.......Ended")
 			sys.exit()
-			#setRGB(0,0,0)
 sys.exit()
 

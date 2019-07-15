@@ -22,7 +22,7 @@ Lt= conn.cursor() # a cursor for the database
 Lt.execute('CREATE TABLE IF NOT EXISTS Data(Datestmp TEXT,Topic TEXT,Data TEXT )') # creating a table
 
 def Reset_data():
-    unix = int( time.time()) #exract the current time when the data is received via mqtt
+    unix = int( time.time()) #extract the current time when the data is received via mqtt
     date = str(datetime.datetime.fromtimestamp(unix).strftime('%Y-%m-%d %H:%M:%S'))
 
     Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/INpeoplecount','0'))

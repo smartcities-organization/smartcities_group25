@@ -1,4 +1,7 @@
-# the main Brain
+# This file is the Main Control File which receives all the Inputs and 
+# derives the output actions from the FD planner. These actions are decoded 
+# and sent accordingly to the Actuator file for further Hardware control 
+
 import paho.mqtt.publish as publish
 import paho.mqtt.client as mqtt
 import time
@@ -29,10 +32,6 @@ ForecastUpdated = True
 LightIntensityUpdate = True
 peoplecountUpdated = True
 
-
-LedCount = 0
-
-
 prev_peopleIN =0
 prev_peopleOUT =0
 prev_peoplecount =0
@@ -48,7 +47,6 @@ green = False
 blue =False
 
 
-
 #global Flags 
 global calcflag 
 calcflag = True
@@ -57,15 +55,12 @@ chgCheck = True
 global init_passed 
 init_passed = False
 
-#openingTime = "08:00"
-#closingTime = "22:00"
 openingTime = "08:00"
 closingTime = "22:00"
 TimeOpen = 8
 TimeClose = 22
 Library_Status = "Close"
 
-## remember it is one hour delayed in R Pi internal clock
 Ctime = datetime.now()   
 if int(Ctime.hour) >= TimeOpen and int(Ctime.hour) < TimeClose:
 	Library_Status = "Open"
@@ -73,10 +68,10 @@ else:
 	Library_Status = "Close"
 
 print(Library_Status)
+
 publish.single("SmartCities/Library_Status", Library_Status, hostname=myhostname)
 
 def LineDecode(sline):
-	global LedCount
 	global heater_on
 	global cooler_on
 	global red 
@@ -88,33 +83,27 @@ def LineDecode(sline):
 	if a[0] == "(switchon":
 		if a[1] == "redl)":
 			print ("red led ON")
-			#LedCount = LedCount +1
 			red = True
 			publish.single("Actuator/LedControl", "RedLedON", hostname=myhostname) 
 		elif a[1] == "greenl)":
 			print ("green led ON")
-			#LedCount = LedCount +1
 			green = True
 			publish.single("Actuator/LedControl", "GreenLedON", hostname=myhostname) 
 		elif a[1] == "bluel)":
 			print("blue led ON")
-			#LedCount = LedCount +1
 			blue = True
 			publish.single("Actuator/LedControl", "BlueLedON", hostname=myhostname) 
 	elif a[0] == "(switchoff":
 		if a[1] == "redl)":
 			print ("red led OFF")
-			#LedCount = LedCount - 1
 			red = False
 			publish.single("Actuator/LedControl", "RedLedOFF", hostname=myhostname) 
 		elif a[1] == "greenl)":
 			print ("green led OFF")
-			#LedCount = LedCount - 1
 			green = False
 			publish.single("Actuator/LedControl", "GreenLedOFF", hostname=myhostname) 
 		elif a[1] == "bluel)":
 			print("blue led OFF")
-			#LedCount = LedCount - 1
 			blue = False
 			publish.single("Actuator/LedControl", "BlueLedOFF", hostname=myhostname) 
 	elif a[0] == "(heateron":
@@ -155,8 +144,6 @@ def LineDecode(sline):
 		publish.single("Database/Humidity_Control", "both_off", hostname=myhostname)
 
 
-
-
 def changeCheck():
 	print ("changeCheck called")
 	global init_passed
@@ -190,7 +177,6 @@ def changeCheck():
 			prev_IsMotionDetected != IsMotionDetected or
 			prev_ForecastTemp1H != ForecastTemp1H ) :
 			calcflag = True
-			#print("calc 88888888888888888888888888888888888888888888888888888888=" + str(calcflag))
 	else:
 		prev_peopleIN = peopleIN
 		prev_peopleOUT = peopleOUT
@@ -212,7 +198,6 @@ def changeCheck():
 	prev_IsMotionDetected = IsMotionDetected
 	prev_ForecastTemp1H = ForecastTemp1H
 
-	#print("init_passed = " + str(init_passed))
 
 def TargetTemperatureCalc():
 
@@ -233,8 +218,10 @@ def TargetTemperatureCalc():
 	elif red is False and green is False and blue is False:
 		LedCount = 0
 
-	# assumtion that each person on average contribute 0.1 deg to the 
-	# surroundings and each light heats the surrounding by 0.5 deg
+	# the assumption is that each person on average generates heat approx 0.1 deg and each light by 0.5 deg
+	# 0.1/0.5 deg is hard coded just to show the increse in the temp
+	# but not in reality it needs to be calibrated
+
 	TargetTemp = 23 - (peoplecount * 0.1) - (LedCount * 0.5)
 	print( "updated Target = " + str(TargetTemp))
 	publish.single("SmartCities/TargetTemperature", TargetTemp, hostname=myhostname)
@@ -242,17 +229,10 @@ def TargetTemperatureCalc():
 	if prev_TargetTemp != TargetTemp:
 		print(prev_TargetTemp)
 		print(TargetTemp)
-		TempUpdated = True
+		TempUpdated = True  # TempUpdated flag is used for both Sensor Temperature and Target Temperature changes 
 		prev_TargetTemp = TargetTemp
 
-
-
-
-
-	# 0.1 is hard coded just to show the increse in the temp
-	# but not in reality needs to calibrated
-
-
+#MQTT Callback functions
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
@@ -312,7 +292,6 @@ def on_message(client, userdata, msg):
     	#print(ForecastTemp1H)
     chgCheck = True
 
-
 def OpenLibrary_job():
 	global Library_Status
 	Library_Status = "Open"
@@ -336,16 +315,16 @@ client.subscribe("SmartCities/#")
 client.loop_start()
 
 while True:
-	time.sleep(0.5)
+	time.sleep(0.5)  # time for MQTT to perform its checks
 	client.loop_stop()
-	#print("loop entry")
 	if chgCheck is True:
 		changeCheck()
-		#print("calc 1111111111111111111111111111111111111111111111111111111=" + str(calcflag))
 		if calcflag is True:
+			
 			print("in Loop")
-			#print("calc 555555555555555555555555555555555555555555=" + str(calcflag))
 
+			##############################################################################
+			# Lighting Control Code
 			if (peoplecountUpdated == True or LightIntensityUpdate == True) and Library_Status == "Open":
 				if peoplecount > 0:
 					if LightIntensity == "DARK":
@@ -358,14 +337,13 @@ while True:
 						a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllLedOff.pddl --search \"astar(blind())\"")
 				else:
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllLedOff.pddl --search \"astar(blind())\"")
-				#os.system("clear")
+				
 				f = open("sas_plan")
 				line = f.readline()
 				while line.split()[0] != ";":  # this is done to ignore the last line in the plan file
 					LineDecode(sline=line)
 					line = f.readline()
 				f.close()
-				#os.system("sudo rm sas_plan")
 
 				peoplecountUpdated = False
 				LightIntensityUpdate = False
@@ -388,44 +366,41 @@ while True:
 
 				if SensorTemp > TargetTemp and Heat == True and Cool == False:  
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/HeaterOff.pddl --search \"astar(blind())\"")
-					print("1")
-					# Surrounding is Cold and Senseor is also hot so turn off Heat
+					# Surrounding is Cold and Sensor is also hot so turn off Heat
 
 				elif SensorTemp > TargetTemp and Heat == False:# (Cool == True or Cool == False): 
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/CoolerOn.pddl --search \"astar(blind())\"")
-					print("2")
-					# Surrounding is Hot and Senseor is also hot so turn on cool
+					# Surrounding is Hot and Sensor is also hot so turn on cool
 				
 				elif SensorTemp < TargetTemp and  Cool == False: #(Heat == True or False)
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/HeaterOn.pddl --search \"astar(blind())\"") 
-					print("3")
-					# Surrounding is Cold and Senseor is also Cold so turn on Heat
+					# Surrounding is Cold and Sensor is also Cold so turn on Heat
 				
 				elif SensorTemp < TargetTemp and Heat == False and Cool == True:  
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/CoolerOff.pddl --search \"astar(blind())\"")
-					print("4")
-					# Surrounding is Hot and Senseor is also cold so turn off cool
+					# Surrounding is Hot and Sensor is also cold so turn off cool
 
 				elif SensorTemp == TargetTemp:  
 					# Surrounding is equal to target and sensor also equal to target
 					if heater_on == True:
 						a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/HeaterOff.pddl --search \"astar(blind())\"")
-						print("5")
 						# turn off Heater
 					elif cooler_on == True:
 						a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/CoolerOff.pddl --search \"astar(blind())\"")
-						print("6")
 						# Turn off Cooler
-				#os.system("clear")
+				
 				f = open("sas_plan")
 				line = f.readline()
 				while line.split()[0] != ";":  # this is done to ignore the last line in the plan file
 					LineDecode(sline=line)
 					line = f.readline()
 				f.close()
-				#os.system("sudo rm sas_plan")
+				
 				TempUpdated =False
 				ForecastUpdated = False
+
+			##############################################################################
+			# Humidity Control Code
 
 			if(HumUpdated == True):
 				if(SensorHum<30):
@@ -434,29 +409,29 @@ while True:
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/dehum_ON.pddl --search \"astar(blind())\"")
 				elif(SensorHum>=30 and SensorHum<=50):
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllHum_off.pddl --search \"astar(blind())\"")
+				
 				f = open("sas_plan")
 				line = f.readline()
 				while line.split()[0] != ";":  # this is done to ignore the last line in the plan file
 					LineDecode(sline=line)
 					line = f.readline()
 				f.close()
-				#os.system("sudo rm sas_plan")
+				
 				HumUpdated =False
 
 			calcflag = False
 
 
+			##############################################################################
+			# Alarm Control Code
 			if Library_Status == "Close":
 				if IsMotionDetected == 1:
 					publish.single("Actuator/Buzzer", "BuzzerOn", hostname=myhostname)
-					#print("IsMotionDetected = " + str(IsMotionDetected))
 					
 
 		chgCheck = False
+
 		print("Library_Status = " + Library_Status +"\nWeatherForecast = "+str(ForecastTemp1H)+ "\nTarget = " + str(TargetTemp) + "\nSensorTemp = " + str(SensorTemp) + "\npeoplecount = " + str(peoplecount) + "\nLightIntensity = " + LightIntensity )
 		print("IsMotionDetected = " + str(IsMotionDetected) + "\nHumidity =" + str(SensorHum))
 		print("Humidifier_Status = " + Humidifier_Status)
 	client.loop_start()
-
-	#time.sleep(.5)	
-	#print("loop exit")
