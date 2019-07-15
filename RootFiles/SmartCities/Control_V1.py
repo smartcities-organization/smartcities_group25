@@ -13,21 +13,15 @@ myhostname = "raspberrypig25"
 peopleIN =0
 peopleOUT =0
 peoplecount =0
-SensorTemp = 23.0
+SensorTemp = 24.0
 LightIntensity = "LOW"
 IsMotionDetected = 0
-ForecastTemp1H =23.0
+ForecastTemp1H =24.0
+TempUpdated = False
+ForecastUpdated = False
 TargetTemp = 23
 heater_on = False
 cooler_on = False
-SensorHum = 40
-Humidifier_Status = "None"
-
-TempUpdated = True
-HumUpdated = True
-ForecastUpdated = True
-LightIntensityUpdate = True
-peoplecountUpdated = True
 
 
 LedCount = 0
@@ -41,19 +35,19 @@ prev_LightIntensity = "LOW"
 prev_IsMotionDetected = 0
 prev_ForecastTemp1H = 24.0
 prev_TargetTemp = 23
-prev_SensorHum = 0
 
 red = False
 green = False
 blue =False
 
-
+LightIntensityUpdate = False
+peoplecountUpdated = False
 
 #global Flags 
 global calcflag 
-calcflag = True
+calcflag = False
 global chgCheck 
-chgCheck = True
+chgCheck = False
 global init_passed 
 init_passed = False
 
@@ -66,8 +60,8 @@ TimeClose = 22
 Library_Status = "Close"
 
 ## remember it is one hour delayed in R Pi internal clock
-Ctime = datetime.now()   
-if int(Ctime.hour) >= TimeOpen and int(Ctime.hour) < TimeClose:
+time = datetime.now()   
+if int(time.hour) >= TimeOpen and int(time.hour) < TimeClose:
 	Library_Status = "Open"
 else:
 	Library_Status = "Close"
@@ -82,7 +76,6 @@ def LineDecode(sline):
 	global red 
 	global green 
 	global blue
-	global Humidifier_Status
 
 	a = sline.split()
 	if a[0] == "(switchon":
@@ -141,19 +134,6 @@ def LineDecode(sline):
 		print ("cooler OFF")
 		cooler_on = False
 		publish.single("Actuator/Cooler", "cool_off", hostname=myhostname)
-	elif a[0] == "(on_dehumidifier":
-		print("De-Humidifier ON")
-		Humidifier_Status = "De-Humidifier ON"
-		publish.single("Database/Humidity_Control", "dehumidifier_on", hostname=myhostname)
-	elif a[0] == "(on_humidifier":
-		print("Humidifier ON")
-		Humidifier_Status = "Humidifier ON"
-		publish.single("Database/Humidity_Control", "humidifier_on", hostname=myhostname)
-	elif a[0] == "(off_hum_dehum":
-		print("Both Humidifier and De-Humidifier OFF")
-		Humidifier_Status = "Both Humidifier and De-Humidifier OFF"
-		publish.single("Database/Humidity_Control", "both_off", hostname=myhostname)
-
 
 
 
@@ -165,7 +145,6 @@ def changeCheck():
 	global peopleOUT 
 	global peoplecount 
 	global SensorTemp 
-	global SensorHum
 	global LightIntensity 
 	global IsMotionDetected 
 	global ForecastTemp1H 
@@ -174,7 +153,6 @@ def changeCheck():
 	global prev_peopleOUT 
 	global prev_peoplecount 
 	global prev_SensorTemp 
-	global prev_SensorHum 
 	global prev_LightIntensity
 	global prev_IsMotionDetected
 	global prev_ForecastTemp1H
@@ -185,7 +163,6 @@ def changeCheck():
 			prev_peopleOUT != peopleOUT or
 			prev_peoplecount != peoplecount or
 			prev_SensorTemp != SensorTemp or
-			prev_SensorHum != SensorHum or
 			prev_LightIntensity != LightIntensity or
 			prev_IsMotionDetected != IsMotionDetected or
 			prev_ForecastTemp1H != ForecastTemp1H ) :
@@ -196,7 +173,6 @@ def changeCheck():
 		prev_peopleOUT = peopleOUT
 		prev_peoplecount = peoplecount
 		prev_SensorTemp = SensorTemp
-		prev_SensorHum = SensorHum
 		prev_LightIntensity = LightIntensity
 		prev_IsMotionDetected = IsMotionDetected
 		prev_ForecastTemp1H = ForecastTemp1H
@@ -207,7 +183,6 @@ def changeCheck():
 	prev_peopleOUT = peopleOUT
 	prev_peoplecount = peoplecount
 	prev_SensorTemp = SensorTemp
-	prev_SensorHum = SensorHum
 	prev_LightIntensity = LightIntensity
 	prev_IsMotionDetected = IsMotionDetected
 	prev_ForecastTemp1H = ForecastTemp1H
@@ -285,13 +260,6 @@ def on_message(client, userdata, msg):
     	TempUpdated =True
     	#print(SensorTemp)
 
-    elif msg.topic == "SmartCities/Humidity":
-    	global SensorHum
-    	global HumUpdated
-    	SensorHum = round(float(msg.payload))
-    	print(SensorHum)
-    	HumUpdated =True
-
     elif msg.topic == "SmartCities/LightIntensity":
     	global LightIntensity
     	global LightIntensityUpdate
@@ -336,8 +304,7 @@ client.subscribe("SmartCities/#")
 client.loop_start()
 
 while True:
-	time.sleep(0.5)
-	client.loop_stop()
+	#time.sleep(1)
 	#print("loop entry")
 	if chgCheck is True:
 		changeCheck()
@@ -365,12 +332,11 @@ while True:
 					LineDecode(sline=line)
 					line = f.readline()
 				f.close()
-				#os.system("sudo rm sas_plan")
 
 				peoplecountUpdated = False
 				LightIntensityUpdate = False
 
-			TargetTemperatureCalc()
+				TargetTemperatureCalc()
 
 			##############################################################################
 			# Temperature Control Code
@@ -385,36 +351,29 @@ while True:
 					Heat = False
 					Cool = False
 
-
 				if SensorTemp > TargetTemp and Heat == True and Cool == False:  
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/HeaterOff.pddl --search \"astar(blind())\"")
-					print("1")
 					# Surrounding is Cold and Senseor is also hot so turn off Heat
 
 				elif SensorTemp > TargetTemp and Heat == False:# (Cool == True or Cool == False): 
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/CoolerOn.pddl --search \"astar(blind())\"")
-					print("2")
 					# Surrounding is Hot and Senseor is also hot so turn on cool
 				
 				elif SensorTemp < TargetTemp and  Cool == False: #(Heat == True or False)
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/HeaterOn.pddl --search \"astar(blind())\"") 
-					print("3")
 					# Surrounding is Cold and Senseor is also Cold so turn on Heat
 				
 				elif SensorTemp < TargetTemp and Heat == False and Cool == True:  
 					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/CoolerOff.pddl --search \"astar(blind())\"")
-					print("4")
 					# Surrounding is Hot and Senseor is also cold so turn off cool
 
 				elif SensorTemp == TargetTemp:  
 					# Surrounding is equal to target and sensor also equal to target
 					if heater_on == True:
 						a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/HeaterOff.pddl --search \"astar(blind())\"")
-						print("5")
 						# turn off Heater
 					elif cooler_on == True:
 						a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/CoolerOff.pddl --search \"astar(blind())\"")
-						print("6")
 						# Turn off Cooler
 				#os.system("clear")
 				f = open("sas_plan")
@@ -423,40 +382,21 @@ while True:
 					LineDecode(sline=line)
 					line = f.readline()
 				f.close()
-				#os.system("sudo rm sas_plan")
 				TempUpdated =False
 				ForecastUpdated = False
-
-			if(HumUpdated == True):
-				if(SensorHum<30):
-					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/hum_ON.pddl --search \"astar(blind())\"")
-				elif(SensorHum>50):
-					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/dehum_ON.pddl --search \"astar(blind())\"")
-				elif(SensorHum>=30 and SensorHum<=50):
-					a = os.system("sudo /home/pi/planner/fast-downward.py /home/pi/planner/domain.pddl /home/pi/planner/AllHum_off.pddl --search \"astar(blind())\"")
-				f = open("sas_plan")
-				line = f.readline()
-				while line.split()[0] != ";":  # this is done to ignore the last line in the plan file
-					LineDecode(sline=line)
-					line = f.readline()
-				f.close()
-				#os.system("sudo rm sas_plan")
-				HumUpdated =False
-
 			calcflag = False
-
 
 			if Library_Status == "Close":
 				if IsMotionDetected == 1:
 					publish.single("Actuator/Buzzer", "BuzzerOn", hostname=myhostname)
-					#print("IsMotionDetected = " + str(IsMotionDetected))
 					
 
 		chgCheck = False
 		print("Library_Status = " + Library_Status +"\nWeatherForecast = "+str(ForecastTemp1H)+ "\nTarget = " + str(TargetTemp) + "\nSensorTemp = " + str(SensorTemp) + "\npeoplecount = " + str(peoplecount) + "\nLightIntensity = " + LightIntensity )
-		print("IsMotionDetected = " + str(IsMotionDetected) + "\nHumidity =" + str(SensorHum))
-		print("Humidifier_Status = " + Humidifier_Status)
-	client.loop_start()
+		print("IsMotionDetected = " + str(IsMotionDetected))
 
 	#time.sleep(.5)	
 	#print("loop exit")
+   
+
+

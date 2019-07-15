@@ -1,2 +1,2 @@
-(switchon greenl)
+(on_dehumidifier dhr targeth currenth)
 ; cost = 1 (unit cost)

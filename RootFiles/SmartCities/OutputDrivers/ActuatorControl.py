@@ -17,6 +17,7 @@ RedLed =5
 BlueLed =7
 GreenLed =6
 buzzer = 2
+BuzzerOn = False
 
 myhostname = "raspberrypig25"
 #myhostname = "test.mosquitto.org"
@@ -47,25 +48,26 @@ def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
 
 def on_message(client, userdata, msg):
+    global BuzzerOn
     print(msg.topic+" "+str(msg.payload))
     msg.payload = msg.payload.decode("utf-8")
 
-    if msg.payload == "circle1_on":
+    if msg.payload == "heat_on":
         print("Switching ON Circle 1")
         circle1.switch_on ()
         publish.single("Database/Heater", "1", hostname=myhostname)
 
-    elif msg.payload == "circle1_off":
+    elif msg.payload == "heat_off":
     	print("Switching OFF Circle 1")
     	circle1.switch_off ()
     	publish.single("Database/Heater", "0", hostname=myhostname)
 
-    elif msg.payload == "circle2_on":
+    elif msg.payload == "cool_on":
         print("Switching ON Circle 2")
         circle2.switch_on ()
         publish.single("Database/Cooler", "1", hostname=myhostname)
 
-    elif msg.payload == "circle2_off":
+    elif msg.payload == "cool_off":
     	print("Switching OFF Circle 2")
     	circle2.switch_off ()
     	publish.single("Database/Cooler", "0", hostname=myhostname)
@@ -103,11 +105,13 @@ def on_message(client, userdata, msg):
     elif msg.payload == "BuzzerOn":
         print("Alarm Buzzer ON")
         digitalWrite(buzzer,1)
+        BuzzerOn = True
         publish.single("Database/Buzzer", "1", hostname=myhostname)
 
     elif msg.payload == "BuzzerOff":
         print("Alarm Buzzer OFF")
         digitalWrite(buzzer,0)
+        BuzzerOn = False
         publish.single("Database/Buzzer", "0", hostname=myhostname)
 
 
@@ -117,9 +121,16 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.connect(myhostname,1883,60)
 client.subscribe("SmartCities/#")
-#client.loop_start()
-client.loop_forever()
-# while True:
-#     print("wating for the message")
-#     time.sleep(1)
-#     pass
+client.subscribe("Actuator/#")
+client.subscribe("BuzzerControl/#")
+
+client.loop_start()
+#client.loop_forever()
+while True:
+     #print("wating for the message")
+     if BuzzerOn == True:
+                digitalWrite(buzzer,1)
+                time.sleep(0.5)
+                digitalWrite(buzzer,0)
+                time.sleep(0.5)
+     
