@@ -17,7 +17,7 @@ Jerome}
 \institute{Service Computing Department, IAAS, University of Stuttgart
 \newline\email{st164379@stud.uni-stuttgart.de}
 \newline\email{st164388@stud.uni-stuttgart.de}
-\newline\email{st1164430@stud.uni-stuttgart.de}}
+\newline\email{st164430@stud.uni-stuttgart.de}}
 %
 \maketitle              % typeset the header of the contribution
 %
@@ -80,7 +80,7 @@ Since the human body as well as a lighted bulb radiate heat energy, we have cons
 	The burglar alarm system is designed to detect intrusion or unauthorized entry of a person after the working hours of the library. The PIR motion sensor detects for any movement at library during the closed hours and turns on the buzzer, which alerts the librarian. The buzzer stops when it has been turned off manually by the librarian.
 \vspace{2mm}
 \newline\textbf{Database}:
-	For the purpose of storing the data, we are using a relational database management system, SQLite. Our database stores data in the form of a table with its contents as Date stamp, Topic and Sensor data. The data to be stored is received via MQTT. The database script subscribes to two topics, namely SmartCities and Database. SmartCities topic corresponds to the data from the sensor script and Database topic to the actuator script. At the time of reception, the time is calculated in the format “YYYY-MM-DD HH-MM-SS” ,using the datetime library. The topic and the corresponding data is stored. A change in data is stored in the database.
+	For the purpose of storing the data, we are using a relational database management system, SQLite. Our database stores data in the form of a table with its contents as Date stamp, Topic and data. The data to be stored is received via MQTT. The database script subscribes to two topics, namely SmartCities and Database. SmartCities topic corresponds to the data from the sensor script and Database topic to the actuator script. At the time of reception, the time is calculated in the format “YYYY-MM-DD HH-MM-SS” ,using the datetime library. The topic and the corresponding data is stored. A change in data is stored in the database.
 
 \vspace{3mm}
 \textbf{GUI}:
