@@ -15,32 +15,32 @@ sensor_value = ''
 topic_value = ''
 
 #create database
-conn = sqlite3.connect('Test2_Group25.db')
+conn = sqlite3.connect('Test_Group25.db')
 print('database created')
 Lt= conn.cursor() # a cursor for the database
 
-Lt.execute('CREATE TABLE IF NOT EXISTS Data(Datestmp TEXT,Topic TEXT,Sensor_Data TEXT )') # creating a table
+Lt.execute('CREATE TABLE IF NOT EXISTS Data(Datestmp TEXT,Topic TEXT,Data TEXT )') # creating a table
 
 def Reset_data():
     unix = int( time.time()) #exract the current time when the data is received via mqtt
     date = str(datetime.datetime.fromtimestamp(unix).strftime('%Y-%m-%d %H:%M:%S'))
 
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/INpeoplecount','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/OUTpeoplecount','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/peoplecount','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/Temperature','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/TargetTemperature','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/LightIntensity','LOW'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/MotionDetected','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/WeatherForecast','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'Database/Heater','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'Database/Cooler','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'Database/RedLed','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'Database/GreenLed','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'Database/BlueLed','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/Library_Status','Close'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'SmartCities/Humidity','0'))
-    Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,'Database/Humidity_Control','both_off'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/INpeoplecount','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/OUTpeoplecount','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/peoplecount','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/Temperature','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/TargetTemperature','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/LightIntensity','LOW'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/MotionDetected','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/WeatherForecast','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'Database/Heater','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'Database/Cooler','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'Database/RedLed','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'Database/GreenLed','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'Database/BlueLed','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/Library_Status','Close'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'SmartCities/Humidity','0'))
+    Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,'Database/Humidity_Control','both_off'))
 
 
 def on_connect(client, userdata, flags, rc):
@@ -120,10 +120,10 @@ def on_message(client, userdata, msg):
 
         # Database is empty
         if result is None:
-            Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
+            Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
         else: # compare the current sensor value and the value already stored in database
             if( sensor_value != result[2]):
-                Lt.execute("INSERT INTO Data(Datestmp,Topic,Sensor_Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
+                Lt.execute("INSERT INTO Data(Datestmp,Topic,Data)VALUES (?,?,?)",(date,topic_value,sensor_value))
             else:
                 print("repeated data")
     conn.commit()
