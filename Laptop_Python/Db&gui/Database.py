@@ -1,4 +1,4 @@
-#Database file
+#Database file: SQLITE3 is used to create a database which creates a .db file which can be viewed online using a sqlite viewer.
 
 import time
 import sqlite3

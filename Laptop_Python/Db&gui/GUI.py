@@ -1,4 +1,4 @@
-#GUI For Smart Library
+#GUI For Smart Library: Tkinter module is used to create a gui.
 
 import time
 import sqlite3
